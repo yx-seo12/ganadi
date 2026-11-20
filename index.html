@@ -1,0 +1,1796 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
+<title>13번째 방문자</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nanum+Myeongjo:wght@400;700;800&family=Gowun+Batang:wght@400;700&family=Nanum+Pen+Script&family=Nanum+Gothic+Coding&display=swap">
+<style>
+:root{--bg:#050505;--panel:#101010;--gray:#1d1d1d;--line:#2b1010;--red:#7a0a0a;--red2:#b3121b;--tx:#cfc8bd;--dim:#7d766c;--ok:#6f8f6a;
+--serif:'Nanum Myeongjo','Gowun Batang','Batang','Noto Serif KR',serif;--body:'Gowun Batang','Nanum Myeongjo',serif;--mono:'Nanum Gothic Coding','Consolas',monospace;--pen:'Nanum Pen Script','Gowun Batang',cursive}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%;background:var(--bg);color:var(--tx);font-family:var(--body);overflow:hidden;-webkit-user-select:none;user-select:none;-webkit-tap-highlight-color:transparent}
+button{font-family:inherit;cursor:pointer}
+.hide{display:none!important}
+#app{position:fixed;inset:0;display:flex;flex-direction:column;background:#000}
+#app.shake{animation:shake .5s cubic-bezier(.36,.07,.19,.97) both}
+#app.shake2{animation:shake 1.1s cubic-bezier(.36,.07,.19,.97) both}
+@keyframes shake{10%,90%{transform:translate(-2px,1px)}20%,80%{transform:translate(5px,-3px)}30%,50%,70%{transform:translate(-9px,4px) rotate(-.4deg)}40%,60%{transform:translate(9px,-4px) rotate(.4deg)}}
+#app.tear #stage{filter:invert(1) hue-rotate(180deg) contrast(2.2);transform:skewX(7deg) translateX(-2%)}
+#app.tear2 #stage{filter:saturate(4) contrast(3) brightness(1.4);transform:skewX(-5deg) translateX(3%) scaleY(1.04)}
+
+/* HUD */
+#hud{flex:0 0 auto;display:flex;flex-wrap:wrap;align-items:center;gap:6px 14px;padding:7px 12px;background:linear-gradient(#0e0d0d,#060606);border-bottom:1px solid var(--line);font-size:13px;z-index:20;position:relative}
+#hud .chap{font-family:var(--serif);font-weight:800;color:#d9cfc0;letter-spacing:.05em}
+#hud .chap small{color:var(--red2);font-weight:700;margin-right:6px}
+#hud .clock{font-family:var(--mono);color:var(--red2);background:#140606;border:1px solid #3a0d0d;padding:1px 7px;border-radius:2px;text-shadow:0 0 6px #b3121b88}
+#hud .stats{display:flex;gap:10px;font-family:var(--mono);color:var(--dim);font-size:12px;align-items:center}
+#hud .stats b{color:var(--tx);font-weight:400}
+#hud .stats .o b{color:#8fb38a}#hud .stats .ng b{color:#d24a4a}
+#san{width:70px;height:6px;background:#1a1a1a;border:1px solid #333;position:relative;display:inline-block;vertical-align:middle}
+#sanFill{position:absolute;inset:0;background:linear-gradient(90deg,#5a0909,#b3121b);transform-origin:left;transition:transform .5s}
+#hud .btns{margin-left:auto;display:flex;gap:5px;flex-wrap:wrap}
+.hb{background:#151313;color:var(--tx);border:1px solid #352020;padding:4px 9px;font-size:12px;border-radius:2px;transition:.15s;min-height:28px}
+.hb:hover{background:#2a0c0c;border-color:var(--red2);color:#fff}
+.hb.dis{opacity:.35;pointer-events:none}
+#objective{width:100%;font-size:12.5px;color:#a89f92;font-family:var(--body);letter-spacing:.02em}
+#objective::before{content:'▸ 현재 목표  ';color:var(--red2)}
+
+/* stage */
+#main{flex:1;position:relative;min-height:0;display:flex;align-items:flex-start;justify-content:center;overflow:hidden}
+#stage{position:relative;overflow:hidden;background:#000;--mx:50%;--my:50%;--fr:150px;--fd:.6;box-shadow:0 0 0 1px #1a0707,0 0 60px #000 inset}
+#parallax{position:absolute;inset:-3%;transition:transform .25s ease-out}
+#scene{position:absolute;inset:0;width:100%;height:100%;display:block}
+#hotspots{position:absolute;inset:0}
+#hotspots.locked{pointer-events:none}
+.hs{position:absolute;background:transparent;border:1px dashed transparent;border-radius:3px;padding:0;transition:border-color .2s,background .2s}
+.hs:hover,.hs:focus-visible{border-color:rgba(200,60,60,.65);background:rgba(120,0,0,.12);outline:none}
+.hs .lbl{position:absolute;left:50%;top:-6px;transform:translate(-50%,-100%);white-space:nowrap;background:#0b0b0b;border:1px solid #4a1414;color:#e6dccb;font-size:12px;padding:3px 8px;opacity:0;pointer-events:none;transition:.15s;font-family:var(--body)}
+.hs:hover .lbl,.hs:focus-visible .lbl{opacity:1}
+.hs .dot{position:absolute;left:50%;top:50%;width:10px;height:10px;margin:-5px;border-radius:50%;background:#c22;box-shadow:0 0 10px #f33;animation:pulse 1.6s infinite}
+.hs.done .dot{background:#555;box-shadow:none;animation:none;width:7px;height:7px;margin:-3.5px}
+.hs.hl{border-color:#ff4444;background:rgba(255,40,40,.18);animation:hl .5s 5 alternate}
+.hs.secret{border:none!important;background:none!important}
+.hs.secret .lbl{font-size:11px;color:#888}
+@keyframes pulse{0%,100%{transform:scale(.7);opacity:.6}50%{transform:scale(1.2);opacity:1}}
+@keyframes hl{to{background:rgba(255,40,40,.02)}}
+#flash{position:absolute;inset:0;pointer-events:none;background:radial-gradient(circle at var(--mx) var(--my),transparent 0,transparent var(--fr),rgba(0,0,0,var(--fd)) calc(var(--fr)*2.7))}
+#dark{position:absolute;inset:0;background:#000;pointer-events:none;opacity:0}
+#vign{position:absolute;inset:0;pointer-events:none;background:radial-gradient(ellipse at center,transparent 45%,rgba(0,0,0,.85) 100%);mix-blend-mode:multiply}
+#redTint{position:absolute;inset:0;pointer-events:none;background:#6b0000;mix-blend-mode:multiply;opacity:0;transition:opacity 1s}
+#grain{position:fixed;inset:0;width:100%;height:100%;pointer-events:none;opacity:.045;mix-blend-mode:screen;z-index:90}
+#scan{position:fixed;inset:0;pointer-events:none;z-index:91;background:repeating-linear-gradient(0deg,rgba(0,0,0,.18) 0,rgba(0,0,0,.18) 1px,transparent 1px,transparent 3px)}
+#caption{position:absolute;left:14px;bottom:12px;font-style:italic;color:#9a8f85;font-size:13px;text-shadow:0 0 4px #000;pointer-events:none;transition:opacity .6s;opacity:0;max-width:70%}
+#toast{position:absolute;right:12px;top:12px;background:rgba(10,4,4,.9);border:1px solid #5a1515;color:#e8d8c8;padding:8px 12px;font-size:13px;pointer-events:none;opacity:0;transform:translateY(-8px);transition:.4s;max-width:60%;z-index:5}
+#toast.on{opacity:1;transform:none}
+
+/* dialog */
+#dialog{position:fixed;left:50%;bottom:14px;transform:translateX(-50%);width:min(920px,96%);background:linear-gradient(rgba(12,8,8,.93),rgba(6,4,4,.96));border:1px solid #3d1212;border-left:3px solid var(--red);padding:14px 18px 22px;font-size:clamp(14px,1.9vw,17px);line-height:1.75;z-index:87;cursor:pointer;display:none;box-shadow:0 10px 40px #000}
+#dialog.on{display:block;animation:dlgIn .25s}
+@keyframes dlgIn{from{opacity:0;transform:translate(-50%,8px)}}
+#dlgWho{font-family:var(--serif);font-weight:800;color:var(--red2);font-size:13px;letter-spacing:.1em;margin-bottom:2px;min-height:4px}
+#dlgText .r{color:#e03a3a;text-shadow:0 0 8px #900}
+#dlgText .q{color:#e9dfcd;font-family:var(--serif)}
+#dlgNext{position:absolute;right:14px;bottom:6px;color:var(--red2);font-size:12px;animation:blink 1s infinite}
+@keyframes blink{50%{opacity:.2}}
+
+/* modals */
+.modal{position:fixed;inset:0;z-index:50;display:none;align-items:center;justify-content:center;background:rgba(0,0,0,.72);padding:10px}
+.modal.on{display:flex}
+.card{background:linear-gradient(#141111,#0b0909);border:1px solid #3a1414;box-shadow:0 0 0 4px #0a0505,0 20px 80px #000;max-width:min(760px,100%);width:100%;max-height:96vh;overflow:auto;padding:18px 20px;position:relative}
+.card h2{font-family:var(--serif);margin:0 0 4px;font-size:clamp(18px,3vw,24px);color:#e7dcc9;letter-spacing:.04em}
+.card .meta{font-size:12px;color:var(--dim);font-family:var(--mono);margin-bottom:12px;display:flex;gap:12px;flex-wrap:wrap}
+.card .meta .lv{color:var(--red2)}
+.card .q{font-size:clamp(14.5px,2vw,17px);line-height:1.8;margin:6px 0 12px}
+.card .q b{color:#f0d7c0}
+.fig{display:flex;justify-content:center;margin:8px 0}
+.fig svg{max-width:100%;height:auto}
+.choices{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin:12px 0}
+@media(max-width:520px){.choices{grid-template-columns:repeat(2,1fr)}}
+.choice{background:#191414;border:1px solid #4a1d1d;color:#eadfcc;font-size:20px;padding:12px 6px;font-family:var(--serif);font-weight:700;transition:.12s}
+.choice:hover{background:#2c0e0e;border-color:#c33;transform:translateY(-1px)}
+.choice.bad{background:#3a0606;border-color:#f22;color:#f88;animation:shake .4s}
+.choice.good{background:#13240f;border-color:#6f8f6a;color:#cfe8c8}
+.choice:disabled{pointer-events:none}
+.prow{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.hint{background:#0f0c0a;border-left:2px solid #8a6a2a;padding:8px 12px;font-size:14px;color:#d8c49a;margin-top:8px;line-height:1.6}
+.msg{color:#e04545;font-size:14px;min-height:20px;margin-top:6px}
+.expl{background:#0c120b;border-left:2px solid var(--ok);padding:10px 14px;margin-top:10px;font-size:14.5px;line-height:1.8;color:#cbd8c4}
+.expl b{color:#e8f5dd}
+.expl table,.tbl{border-collapse:collapse;margin:6px 0;font-family:var(--mono);font-size:12px}
+.expl td,.expl th{border:1px solid #2d3b2a;padding:2px 6px;text-align:center}
+.expl td.hit{background:#5a1010;color:#fff}
+.btn{background:#2a0b0b;color:#f2e4d2;border:1px solid #8a1d1d;padding:9px 18px;font-size:15px;font-family:var(--serif);font-weight:700;letter-spacing:.05em;transition:.15s}
+.btn:hover{background:#4a0e0e;border-color:#e33;box-shadow:0 0 14px #b3121b66}
+.btn.ghost{background:transparent;border-color:#444;color:#aaa}
+.btn.ghost:hover{border-color:#aaa;color:#fff}
+.x{position:absolute;right:10px;top:8px;background:none;border:none;color:#999;font-size:22px}
+#puzzle .card{border-top:3px solid var(--red)}
+#puzzle .card.shk{animation:shake .45s}
+.tag{display:inline-block;font-size:11px;padding:1px 6px;border:1px solid #444;color:#aaa;margin-right:6px;font-family:var(--mono)}
+.tag.t{border-color:#a33;color:#e66}.tag.s{border-color:#8a6a2a;color:#d8b46a}
+.clue{border-bottom:1px solid #221;padding:9px 0;font-size:14px;line-height:1.65}
+.clue b{color:#eadac2}
+.vt-wrap{overflow:auto;max-height:56vh}
+table.vt{border-collapse:collapse;width:100%;font-size:13px;min-width:640px}
+.vt th{background:#1a0d0d;color:#d9b3a6;font-weight:700;padding:6px;border:1px solid #331;position:sticky;top:0}
+.vt td{padding:4px 6px;border:1px solid #2a1d1a;text-align:center}
+.vt tr:nth-child(even) td{background:#0f0c0b}
+.vt .sig{font-family:var(--pen);font-size:21px;color:#b9c4d6;display:inline-block}
+.vt .sig.m{transform:scaleX(-1)}
+.vt .unk td{color:#c33;font-style:italic}
+.tog{border:1px solid #555;background:#141414;color:#bbb;padding:4px 10px;font-size:13px}
+.tog.fake{background:#4a0707;border-color:#f33;color:#fff;box-shadow:0 0 10px #f224}
+
+/* overlays */
+#scare{position:fixed;inset:0;z-index:100;display:none;background:#000}
+#scare.on{display:block}
+#scare canvas{width:100%;height:100%;display:block}
+#scare.zoom canvas{animation:zoom .7s cubic-bezier(.2,1.6,.4,1) both}
+#scare.zoomslow canvas{animation:zoom 1.6s ease-in both}
+#scare.trans{background:transparent;pointer-events:none}
+@keyframes zoom{from{transform:scale(.55)}to{transform:scale(1.25)}}
+#scareText{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-family:var(--serif);font-weight:800;color:#d10f0f;font-size:clamp(40px,11vw,150px);text-shadow:0 0 30px #f00,4px 0 #0ff3,-4px 0 #f0f4;pointer-events:none;text-align:center;letter-spacing:.08em}
+#redflash{position:fixed;inset:0;z-index:99;pointer-events:none;background:#a00;opacity:0}
+#redflash.on{animation:rf .45s}
+@keyframes rf{0%{opacity:.85}100%{opacity:0}}
+#whiteflash{position:fixed;inset:0;z-index:99;pointer-events:none;background:#fff;opacity:0}
+#whiteflash.on{animation:rf .6s}
+#fade{position:fixed;inset:0;z-index:80;background:#000;pointer-events:none;opacity:0;transition:opacity .5s}
+#fade.on{opacity:1;pointer-events:all}
+#fade.cut{transition:none}
+#chapCard{position:fixed;inset:0;z-index:85;display:none;flex-direction:column;align-items:center;justify-content:center;background:#000;pointer-events:none}
+#chapCard.on{display:flex;animation:cc 3s both}
+#chapCard .n{font-family:var(--mono);color:var(--red2);letter-spacing:.5em;font-size:14px}
+#chapCard .t{font-family:var(--serif);font-weight:800;font-size:clamp(32px,7vw,64px);color:#e4d9c6;margin-top:10px;text-shadow:0 0 20px #600}
+#chapCard .s{color:var(--dim);margin-top:12px;font-size:14px}
+@keyframes cc{0%{opacity:0}15%,80%{opacity:1}100%{opacity:0}}
+#cctv{position:fixed;inset:0;z-index:40;display:none;background:#000;flex-direction:column;align-items:center;justify-content:center}
+#cctv.on{display:flex}
+#cctvCv{width:min(100vw,160vh);aspect-ratio:16/10;filter:grayscale(1) contrast(1.3) brightness(1.1) sepia(.25) hue-rotate(60deg);display:block}
+#cctvLbl{position:absolute;top:10px;left:14px;font-family:var(--mono);color:#7f7;font-size:13px;text-shadow:0 0 6px #0f0}
+
+/* title */
+#title{position:fixed;inset:0;z-index:70;background:#000;display:flex;align-items:center;justify-content:center;flex-direction:column;text-align:center;padding:20px}
+#titleCv{position:absolute;inset:0;width:100%;height:100%;opacity:.55}
+#title .inner{position:relative;z-index:2}
+#title h1{font-family:var(--serif);font-weight:800;font-size:clamp(44px,10vw,112px);margin:0;color:#e9e0d0;letter-spacing:.06em;text-shadow:0 0 28px #8b0000,3px 0 rgba(255,0,0,.4),-3px 0 rgba(0,255,255,.15);animation:tg 6s infinite}
+#title h1 span{color:var(--red2)}
+@keyframes tg{0%,92%,100%{transform:none;opacity:1}93%{transform:translate(4px,-2px) skewX(10deg);opacity:.6}95%{transform:translate(-6px,1px);opacity:.9}97%{opacity:.2}}
+#title .sub{color:#a69c8f;margin:12px 0 30px;font-size:clamp(14px,2.2vw,18px);letter-spacing:.2em}
+#title .menu{display:flex;flex-direction:column;gap:10px;align-items:center}
+#title .menu .btn{min-width:240px}
+#title .warn{margin-top:26px;font-size:12px;color:#6d6359;line-height:1.7}
+#pause .card,#confirm .card{text-align:center;max-width:420px}
+#pause .col,#confirm .col{display:flex;flex-direction:column;gap:9px;margin-top:14px}
+#ending{position:fixed;inset:0;z-index:95;display:none;background:#000}
+#ending.on{display:block}
+#endCv{position:absolute;inset:0;width:100%;height:100%}
+#endText{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:min(780px,90%);text-align:center;font-family:var(--serif);font-size:clamp(16px,2.6vw,23px);line-height:1.9;color:#e8dfd0;text-shadow:0 0 12px #000,0 0 4px #000}
+#endText .ln{opacity:0;transition:opacity 1.4s}
+#endText .ln.on{opacity:1}
+#endTitle{font-size:clamp(34px,7vw,70px);font-weight:800;letter-spacing:.08em}
+#endSkip{position:absolute;right:16px;bottom:14px;color:#888;font-size:12px}
+#summary .card{max-width:720px}
+.sumgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:8px;margin:12px 0}
+.sumgrid div{background:#0d0b0b;border:1px solid #2a1515;padding:8px 10px}
+.sumgrid small{display:block;color:var(--dim);font-size:11px}
+.sumgrid b{font-family:var(--mono);font-size:18px;color:#eadfcc}
+.endslots{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px;margin-top:8px}
+.endslots div{border:1px solid #333;padding:10px;font-size:13px;background:#0b0b0b;min-height:70px}
+.endslots div.got{border-color:#a33;background:#160808}
+.endslots b{display:block;font-family:var(--serif);color:#eee}
+.endslots .got b{color:#ff6b6b}
+</style>
+</head>
+<body>
+<div id="app">
+  <header id="hud" class="hide">
+    <span class="chap" id="hChap"><small>1장</small>병원 입장</span>
+    <span class="clock" id="hClock">23:58</span>
+    <span class="stats">
+      <span>⏱ <b id="hTime">00:00</b></span>
+      <span class="o">정답 <b id="hOk">0</b></span>
+      <span class="ng">오답 <b id="hNg">0</b></span>
+      <span title="정신력">정신력 <span id="san"><span id="sanFill"></span></span></span>
+    </span>
+    <span class="btns">
+      <button class="hb" id="bClue">단서 <span id="clueN">0</span></button>
+      <button class="hb dis" id="bLog">명부</button>
+      <button class="hb" id="bHint">힌트</button>
+      <button class="hb" id="bPause">일시정지</button>
+      <button class="hb" id="bMute">소리 켜짐</button>
+      <button class="hb" id="bRestart">다시 시작</button>
+    </span>
+    <div id="objective">—</div>
+  </header>
+  <div id="main">
+    <div id="stage">
+      <div id="parallax"><canvas id="scene"></canvas><div id="hotspots"></div></div>
+      <div id="redTint"></div>
+      <div id="flash"></div>
+      <div id="dark"></div>
+      <div id="vign"></div>
+      <div id="caption"></div>
+      <div id="toast"></div>
+    </div>
+  </div>
+</div>
+
+<div id="title">
+  <canvas id="titleCv"></canvas>
+  <div class="inner">
+    <h1><span>13</span>번째 방문자</h1>
+    <div class="sub">매일 밤 12시 13분, 그들이 온다</div>
+    <div class="menu">
+      <button class="btn" id="tStart">병원에 들어간다</button>
+      <button class="btn ghost" id="tEnds">엔딩 수집</button>
+      <button class="btn ghost" id="tMute">소리: 켜짐</button>
+    </div>
+    <div class="warn">헤드폰 착용을 권장합니다 · 갑작스러운 큰 소리, 깜빡이는 화면, 놀라는 장면이 포함됩니다<br>광과민성 발작 위험이 있는 분은 주의하세요 · 플레이 시간 약 20분</div>
+  </div>
+</div>
+
+<div class="modal" id="puzzle"><div class="card" id="pCard">
+  <h2 id="pTitle"></h2>
+  <div class="meta"><span class="lv" id="pLv"></span><span id="pCat"></span><span id="pNo"></span></div>
+  <div class="q" id="pQ"></div>
+  <div class="fig" id="pFig"></div>
+  <div class="choices" id="pCh"></div>
+  <div class="prow"><button class="hb" id="pHintB">힌트 보기</button><span class="msg" id="pMsg"></span></div>
+  <div id="pHint"></div>
+  <div id="pEx"></div>
+  <div class="prow" style="justify-content:flex-end;margin-top:10px"><button class="btn hide" id="pGo">계속</button></div>
+</div></div>
+
+<div class="modal" id="panel"><div class="card" style="max-width:860px"><button class="x" id="panelX">×</button><h2 id="panelT"></h2><div id="panelB"></div></div></div>
+<div class="modal" id="verdict"><div class="card" style="max-width:900px"><h2>최종 판정 — 방문자 명부</h2><div id="verdictB"></div></div></div>
+<div class="modal" id="pause"><div class="card"><h2>일시정지</h2><div class="meta" style="justify-content:center">병원의 시간이 멈췄다… 정말일까?</div><div class="col">
+  <button class="btn" id="pzResume">계속하기</button><button class="btn ghost" id="pzMute">소리 끄기</button><button class="btn ghost" id="pzRestart">처음부터 다시 시작</button><button class="btn ghost" id="pzTitle">타이틀로</button></div></div></div>
+<div class="modal" id="confirm" style="z-index:210"><div class="card"><h2>다시 시작할까?</h2><div class="meta" style="justify-content:center">현재 진행 상황은 사라진다. 방문자는 다시 온다.</div><div class="col"><button class="btn" id="cfYes">다시 시작</button><button class="btn ghost" id="cfNo">취소</button></div></div></div>
+<div class="modal" id="endsM" style="z-index:75"><div class="card"><button class="x" id="endsX">×</button><h2>엔딩 수집</h2><div id="endsB"></div></div></div>
+<div class="modal" id="summary" style="z-index:96"><div class="card"><h2>플레이 결과</h2><div id="sumB"></div></div></div>
+
+<div id="dialog"><div id="dlgWho"></div><div id="dlgText"></div><div id="dlgNext">▼ 클릭</div></div>
+<div id="cctv"><canvas id="cctvCv"></canvas><div id="cctvLbl">● REC  경비실 CCTV</div></div>
+<div id="ending"><canvas id="endCv"></canvas><div id="endText"></div><div id="endSkip">클릭하여 진행</div></div>
+<div id="chapCard"><div class="n" id="ccN"></div><div class="t" id="ccT"></div><div class="s" id="ccS"></div></div>
+<div id="scare"><canvas id="scareCv"></canvas><div id="scareText"></div></div>
+<div id="redflash"></div><div id="whiteflash"></div><div id="fade"></div>
+<canvas id="grain" width="160" height="100"></canvas><div id="scan"></div>
+<noscript><p style="color:#fff;padding:20px">이 게임은 JavaScript가 필요합니다.</p></noscript>
+<script>
+'use strict';
+/* ===================== 유틸 ===================== */
+const $ = s => document.querySelector(s);
+const rnd = (a, b) => a + Math.random() * (b - a);
+const ri = (a, b) => Math.floor(rnd(a, b + 1));
+const pick = a => a[Math.floor(Math.random() * a.length)];
+const shuffle = a => { a = a.slice(); for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
+const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+const lerp = (a, b, t) => a + (b - a) * t;
+const pad = n => String(n).padStart(2, '0');
+const fmtMin = m => pad(Math.floor(m / 60)) + ':' + pad(m % 60);
+const fmtTime = s => pad(Math.floor(s / 60)) + ':' + pad(Math.floor(s % 60));
+
+/* 다시 시작 시 진행 중인 모든 연출을 안전하게 중단하기 위한 장치 */
+const ABORT = { abort: true };
+let GEN = 0;
+const pend = new Set();
+function guard(executor) {
+  const g = GEN;
+  return new Promise((res, rej) => {
+    const entry = { rej };
+    pend.add(entry);
+    const wrap = fn => v => { pend.delete(entry); if (g !== GEN) return rej(ABORT); fn(v); };
+    executor(wrap(res), wrap(rej));
+  });
+}
+function abortAll() { GEN++; for (const e of pend) e.rej(ABORT); pend.clear(); }
+function wait(ms) {
+  return guard(res => {
+    let left = ms, last = performance.now();
+    const id = setInterval(() => {
+      const now = performance.now();
+      if (!G.paused) left -= now - last;
+      last = now;
+      if (left <= 0) { clearInterval(id); res(); }
+    }, 25);
+  });
+}
+const swallow = e => { if (e !== ABORT) console.error(e); };
+
+/* 저장 (localStorage 실패 시 메모리로 대체) */
+const Store = {
+  mem: {},
+  get(k, d) { try { const v = localStorage.getItem(k); return v ? JSON.parse(v) : d; } catch (e) { return this.mem[k] ?? d; } },
+  set(k, v) { this.mem[k] = v; try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) { } }
+};
+
+/* ===================== 사운드 (Web Audio 합성 — 외부 파일 없음) ===================== */
+const AU = {
+  ctx: null, master: null, muted: false, silent: false, nb: null, amb: {},
+  init() {
+    if (this.ctx) { if (this.ctx.resume) this.ctx.resume(); return; }
+    try {
+      const C = window.AudioContext || window.webkitAudioContext;
+      if (!C) return;
+      const ctx = this.ctx = new C();
+      const comp = ctx.createDynamicsCompressor();
+      comp.threshold.value = -12; comp.ratio.value = 5;
+      this.master = ctx.createGain();
+      this.master.gain.value = this.muted ? 0 : 0.9;
+      this.master.connect(comp); comp.connect(ctx.destination);
+      const len = ctx.sampleRate * 2, b = ctx.createBuffer(1, len, ctx.sampleRate), d = b.getChannelData(0);
+      for (let i = 0; i < len; i++) d[i] = Math.random() * 2 - 1;
+      this.nb = b;
+      this.startAmbient();
+    } catch (e) { this.ctx = null; }
+  },
+  ok() { return !!(this.ctx && this.master && this.ctx.state !== 'closed'); },
+  out(pan) {
+    if (pan && this.ctx.createStereoPanner) { const p = this.ctx.createStereoPanner(); p.pan.value = clamp(pan, -1, 1); p.connect(this.master); return p; }
+    return this.master;
+  },
+  env(g, t, a, peak, d) {
+    g.gain.setValueAtTime(0.0001, t);
+    g.gain.exponentialRampToValueAtTime(Math.max(peak, 0.0002), t + a);
+    g.gain.exponentialRampToValueAtTime(0.0001, t + a + d);
+  },
+  tone(f, dur, o = {}) {
+    if (!this.ok()) return;
+    try {
+      const c = this.ctx, t = c.currentTime + (o.when || 0), a = o.a || 0.01;
+      const os = c.createOscillator(); os.type = o.type || 'sine';
+      os.frequency.setValueAtTime(f, t);
+      if (o.to) os.frequency.exponentialRampToValueAtTime(o.to, t + a + dur);
+      const g = c.createGain(); this.env(g, t, a, o.g || 0.2, dur);
+      let n = os;
+      if (o.lp) { const fl = c.createBiquadFilter(); fl.type = 'lowpass'; fl.frequency.value = o.lp; os.connect(fl); n = fl; }
+      n.connect(g); g.connect(this.out(o.pan));
+      os.start(t); os.stop(t + a + dur + 0.05);
+    } catch (e) { }
+  },
+  noise(dur, o = {}) {
+    if (!this.ok()) return;
+    try {
+      const c = this.ctx, t = c.currentTime + (o.when || 0), a = o.a || 0.005;
+      const s = c.createBufferSource(); s.buffer = this.nb; s.loop = true;
+      const fl = c.createBiquadFilter(); fl.type = o.ft || 'lowpass'; fl.frequency.setValueAtTime(o.f || 1000, t); fl.Q.value = o.q || 1;
+      if (o.fto) fl.frequency.exponentialRampToValueAtTime(o.fto, t + a + dur);
+      const g = c.createGain(); this.env(g, t, a, o.g || 0.2, dur);
+      s.connect(fl); fl.connect(g); g.connect(this.out(o.pan));
+      s.start(t, Math.random()); s.stop(t + a + dur + 0.05);
+    } catch (e) { }
+  },
+  startAmbient() {
+    const c = this.ctx;
+    // 형광등 험 (60Hz 계열)
+    const hum = c.createGain(); hum.gain.value = 0.018;
+    const lp = c.createBiquadFilter(); lp.type = 'lowpass'; lp.frequency.value = 420;
+    lp.connect(hum); hum.connect(this.master);
+    [60, 120, 180].forEach((f, i) => { const o = c.createOscillator(); o.type = 'sawtooth'; o.frequency.value = f + i * 0.3; const g = c.createGain(); g.gain.value = [1, .45, .2][i]; o.connect(g); g.connect(lp); o.start(); });
+    this.amb.hum = hum;
+    // 낮은 긴장감 드론
+    const dr = c.createGain(); dr.gain.value = 0.05; dr.connect(this.master);
+    [41.2, 43.65, 61.74, 87.3].forEach((f, i) => { const o = c.createOscillator(); o.type = i === 3 ? 'triangle' : 'sine'; o.frequency.value = f; const g = c.createGain(); g.gain.value = i === 3 ? .15 : 1; o.connect(g); g.connect(dr); o.start(); });
+    const lfo = c.createOscillator(); lfo.frequency.value = 0.06; const lg = c.createGain(); lg.gain.value = 0.02; lfo.connect(lg); lg.connect(dr.gain); lfo.start();
+    this.amb.drone = dr;
+    // 건물의 공기 소리
+    const ns = c.createBufferSource(); ns.buffer = this.nb; ns.loop = true;
+    const bp = c.createBiquadFilter(); bp.type = 'bandpass'; bp.frequency.value = 380; bp.Q.value = 0.7;
+    const wg = c.createGain(); wg.gain.value = 0.02; ns.connect(bp); bp.connect(wg); wg.connect(this.master); ns.start();
+    this.amb.air = wg;
+  },
+  setTension(x) { if (!this.ok() || !this.amb.drone) return; this.amb.drone.gain.setTargetAtTime(0.035 + 0.1 * clamp(x, 0, 1), this.ctx.currentTime, 1.2); },
+  humLevel(v) { if (!this.ok() || !this.amb.hum) return; this.amb.hum.gain.setTargetAtTime(0.02 * v, this.ctx.currentTime, 0.02); },
+  applyVol() { if (!this.ok()) return; const t = this.ctx.currentTime; this.master.gain.cancelScheduledValues(t); this.master.gain.setTargetAtTime(this.muted || this.silent ? 0 : 0.9, t, 0.02); },
+  setMute(m) { this.muted = m; this.applyVol(); },
+  silence(ms) { // 갑작스러운 정적
+    if (!this.ok()) return;
+    const g = this.master.gain, t = this.ctx.currentTime;
+    g.cancelScheduledValues(t); g.setValueAtTime(g.value, t); g.linearRampToValueAtTime(0, t + 0.03);
+    this.silent = true;
+    setTimeout(() => { this.silent = false; this.applyVol(); }, ms);
+  },
+  footsteps(n = 5, o = {}) {
+    let tt = o.when || 0; const pan = o.pan ?? rnd(-.8, .8);
+    for (let i = 0; i < n; i++) {
+      const g = o.approach ? 0.04 + 0.3 * (i / n) : (o.g || 0.1);
+      this.noise(0.08, { f: rnd(380, 650), g, when: tt, pan });
+      this.tone(rnd(70, 95), 0.07, { g: g * .9, when: tt, pan, to: 50 });
+      tt += rnd(0.4, 0.75) + (Math.random() < .25 ? rnd(.3, .9) : 0); // 불규칙한 발소리
+    }
+  },
+  door(pan) {
+    pan = pan ?? rnd(-.9, .9);
+    this.tone(rnd(80, 110), 0.9, { type: 'sawtooth', to: rnd(150, 230), g: .03, lp: 900, a: .25, pan });
+    this.noise(.4, { f: 180, g: .3, when: 1.0, pan }); this.tone(55, .45, { g: .25, to: 32, when: 1.0, pan });
+  },
+  slam() { this.noise(.5, { f: 320, g: .95 }); this.tone(48, .7, { g: .9, to: 26 }); this.noise(.15, { ft: 'highpass', f: 2500, g: .25 }); },
+  stinger(k = 1) {
+    const base = [233.08, 246.94, 277.18, 311.13, 369.99, 415.3];
+    base.forEach(f => this.tone(f * k * (1 + rnd(-.012, .012)), 1.5, { type: 'sawtooth', g: .065, a: .004, lp: 4200 }));
+    this.noise(.7, { ft: 'highpass', f: 1200, g: .5, a: .003 });
+    this.tone(1500 * k, .9, { type: 'sawtooth', to: 280, g: .06, a: .01 });
+    this.tone(38, 1.2, { g: .7, to: 24 });
+  },
+  sting2() { this.tone(110, 1.4, { type: 'square', g: .09, to: 55, lp: 1500 }); this.noise(.5, { ft: 'bandpass', f: 900, fto: 200, g: .35 }); this.tone(36, 1, { g: .5, to: 25 }); },
+  bang() { this.noise(.8, { f: 260, g: 1 }); this.tone(40, 1.2, { g: 1, to: 22 }); this.noise(.2, { ft: 'highpass', f: 3000, g: .3 }); },
+  knock(n = 3, when = 0, g = .55) { for (let i = 0; i < n; i++) { const w = when + i * 0.3; this.noise(.07, { f: 650, g, when: w }); this.tone(115, .12, { g: g * .8, to: 70, when: w }); } },
+  whisper(dur = 1.6, pan) {
+    if (!this.ok()) return;
+    try {
+      const c = this.ctx, t = c.currentTime;
+      const s = c.createBufferSource(); s.buffer = this.nb; s.loop = true;
+      const bp = c.createBiquadFilter(); bp.type = 'bandpass'; bp.frequency.value = 1900; bp.Q.value = 2.2;
+      const g = c.createGain(); g.gain.setValueAtTime(0, t);
+      for (let x = 0; x < dur; x += 0.06) g.gain.linearRampToValueAtTime(Math.random() < .3 ? 0 : rnd(.04, .2), t + x);
+      g.gain.linearRampToValueAtTime(0, t + dur);
+      s.connect(bp); bp.connect(g); g.connect(this.out(pan ?? rnd(-1, 1)));
+      s.start(t); s.stop(t + dur + .1);
+    } catch (e) { }
+  },
+  ring() { for (let r = 0; r < 2; r++) { const w = r * 1.0; for (let k = 0; k < 8; k++) { this.tone(440, .045, { g: .07, when: w + k * .05, type: 'square', lp: 2200 }); this.tone(480, .045, { g: .07, when: w + k * .05, type: 'square', lp: 2200 }); } } },
+  heartbeat(n = 4, gap = .8) { for (let i = 0; i < n; i++) { this.tone(56, .14, { g: .55, when: i * gap, to: 40 }); this.tone(50, .14, { g: .38, when: i * gap + .24, to: 38 }); } },
+  staticBurst(d = .6, g = .25) { this.noise(d, { ft: 'highpass', f: 900, g, a: .004 }); },
+  chime() { this.tone(659.3, .9, { g: .1 }); this.tone(523.3, 1.3, { g: .1, when: .5 }); },
+  ding() { this.tone(1046.5, 1.4, { g: .1 }); this.tone(2093, .7, { g: .025 }); },
+  beep() { this.tone(988, .07, { g: .022 }); },
+  unlock() { this.noise(.05, { ft: 'bandpass', f: 3000, g: .35 }); this.tone(1300, .06, { g: .06, when: .08, type: 'square', lp: 3000 }); this.noise(.06, { f: 900, g: .3, when: .12 }); },
+  wrongS() { this.tone(98, .6, { type: 'sawtooth', g: .16, to: 52, lp: 900 }); this.tone(104, .6, { type: 'sawtooth', g: .12, to: 55, lp: 900 }); },
+  whoosh() { this.noise(.55, { ft: 'bandpass', f: 300, fto: 2600, q: 1.4, g: .45, a: .18 }); },
+  scream() { this.tone(820, 1.1, { type: 'sawtooth', to: 1650, g: .07, a: .05, lp: 3200 }); this.tone(860, 1.1, { type: 'sawtooth', to: 1500, g: .05, a: .08, lp: 3000 }); },
+  drip() { this.tone(1400, .08, { to: 420, g: .05 }); },
+  creak() { this.tone(rnd(70, 95), 1.6, { type: 'sawtooth', to: rnd(120, 170), g: .025, lp: 700, a: .4 }); },
+  boom() { this.tone(32, 2.5, { g: .6, a: .05, to: 26 }); this.noise(1.5, { f: 120, g: .3, a: .05 }); }
+};
+
+/* ===================== 게임 상태 ===================== */
+let G;
+function newState() {
+  return {
+    running: false, paused: false, busy: false, chapter: 0, scene: 'lobby', clock: '23:58',
+    playTime: 0, correct: 0, wrong: 0, hints: 0, scares: 0, sanity: 100, corruption: 0,
+    clues: [], fragments: new Set(), solved: new Set(), seen: new Set(), arrived: 0,
+    visitors: [], deceased: [], figs: [], fx: [], hs: [],
+    light: 1, baseLight: 1, forcedDark: false, darkLevel: 0, flick: 0, flickLv: 1,
+    lamps: [1, 1, 1, 1, 1, 1], ambientT: 22, scareT: 120, beepT: 2,
+    logUnlocked: false, wrongQ: [], flags: {}, scrawl: genScrawl(), ending: null, fd: .6
+  };
+}
+function genScrawl() {
+  const words = ['13', '열지 마', '돌아가', '나가', '13', '여기 있어', '봤어?', '13', '거짓말', '하나 더'];
+  return shuffle(words).map(t => ({ t, x: rnd(.04, .9), y: rnd(.08, .62), s: rnd(.035, .07), r: rnd(-.35, .35) }));
+}
+
+/* ===================== 방문자 생성 (매 회차 랜덤) ===================== */
+const NAMES = ['김민지', '이서준', '박하은', '최도윤', '정수아', '강지호', '조예린', '윤태민', '장서연', '임건우', '한소율', '오지훈', '서다인', '신우진', '권나래', '황민혁', '안채원', '송현우', '류지안', '배윤서'];
+const PATIENTS = ['문경자', '허만석', '남궁옥', '변춘식', '석미란', '염태호', '진순례', '하봉수', '도말순', '국영철', '편금자', '추병길', '엄정희', '탁용배', '구분이', '설학수', '모정애', '피동춘'];
+const RELS = ['딸', '아들', '어머니', '아버지', '남편', '아내', '동생', '손녀', '손자', '조카', '친구', '형', '누나', '언니'];
+const NOTES = ['젖은 우산을 들고 옴', '국화 한 송이를 들고 옴', '말이 거의 없음', '계속 손목시계를 봄', '손이 몹시 차가움', '낡은 사진을 쥐고 있음', '기침이 잦음', '슬리퍼 차림', '안경에 김이 서려 있음', '목에 붕대를 감음', '신발이 진흙투성이', '같은 질문을 두 번 함'];
+const TELLS = {
+  floor: { name: '존재하지 않는 층', desc: '4층 병실을 방문했다 — 청운병원에는 4층이 없다.' },
+  time: { name: '불가능한 도착 시각', desc: '00:13 이전에 도착했다 — 정문은 00:13에 처음 열린다.' },
+  dead: { name: '이미 죽은 환자', desc: '13년 전 화재로 사망한 환자를 면회하러 왔다.' },
+  mirror: { name: '뒤집힌 서명', desc: '서명이 거울에 비친 것처럼 뒤집혀 있다.' },
+  shadow: { name: '그림자 없음', desc: 'CCTV에 그림자가 찍히지 않았다.' }
+};
+function genVisitors() {
+  const names = shuffle(NAMES), pats = shuffle(PATIENTS), notes = shuffle(NOTES);
+  const r3 = shuffle([...Array(12)].map((_, i) => 301 + i)), r5 = shuffle([...Array(13)].map((_, i) => 501 + i));
+  const base = [13, 17, 22, 28, 35, 49, 56, 64, 73, 85, 135, 152];
+  const vs = base.map((m, i) => ({
+    n: i + 1, name: names[i], rel: pick(RELS), patient: pats[i],
+    room: Math.random() < .5 ? r3.pop() : r5.pop(),
+    time: fmtMin(i ? m + ri(0, 2) : 13), note: notes[i], mirror: false, fake: false, tell: null
+  }));
+  const fakeIdx = shuffle([...Array(12).keys()]).slice(0, 3).sort((a, b) => a - b);
+  const tells = shuffle(Object.keys(TELLS)).slice(0, 3);
+  const deceased = [pats[12], pats[13]];
+  fakeIdx.forEach((k, j) => {
+    const v = vs[k]; v.fake = true; v.tell = tells[j];
+    if (v.tell === 'floor') v.room = 400 + ri(1, 13);
+    if (v.tell === 'time') v.time = '00:0' + ri(1, 9);
+    if (v.tell === 'dead') deceased.push(v.patient);
+    if (v.tell === 'mirror') v.mirror = true;
+    if (v.tell === 'shadow') v.note = 'CCTV 판독: 그림자 없음';
+  });
+  if (deceased.length < 3) deceased.push(pats[14]);
+  G.visitors = vs; G.deceased = shuffle(deceased);
+}
+
+/* ===================== 그리기: 형체 · 얼굴 · 손자국 ===================== */
+function drawFigure(c, x, yb, H, o = {}) {
+  c.save();
+  c.globalAlpha = o.alpha ?? 1;
+  c.fillStyle = o.color || '#020202';
+  c.shadowColor = 'rgba(0,0,0,.95)'; c.shadowBlur = H * 0.06;
+  const hw = H * 0.11, tl = o.tilt || 0;
+  c.beginPath(); c.ellipse(x + tl * H * .04, yb - H * .9, H * .055, H * .072, tl, 0, Math.PI * 2); c.fill();
+  c.beginPath();
+  c.moveTo(x - H * .03, yb - H * .83); c.lineTo(x - hw, yb - H * .77);
+  c.lineTo(x - hw * 1.32, yb - H * .22); c.lineTo(x - hw * 1.12, yb - H * .21);
+  c.lineTo(x - hw * .86, yb - H * .6); c.lineTo(x - hw * .76, yb - H * .42);
+  c.lineTo(x - hw * .62, yb); c.lineTo(x - hw * .36, yb); c.lineTo(x - hw * .08, yb - H * .42);
+  c.lineTo(x + hw * .08, yb - H * .42); c.lineTo(x + hw * .36, yb); c.lineTo(x + hw * .62, yb);
+  c.lineTo(x + hw * .76, yb - H * .42); c.lineTo(x + hw * .86, yb - H * .6);
+  c.lineTo(x + hw * 1.12, yb - H * .21); c.lineTo(x + hw * 1.32, yb - H * .22);
+  c.lineTo(x + hw, yb - H * .77); c.lineTo(x + H * .03, yb - H * .83); c.closePath(); c.fill();
+  if (o.eyes) {
+    c.shadowBlur = H * .03; c.shadowColor = o.eyeColor || '#fff'; c.fillStyle = o.eyeColor || '#f4f0e6';
+    const ey = yb - H * .905, ex = x + tl * H * .04;
+    c.beginPath(); c.arc(ex - H * .02, ey, Math.max(1, H * .006), 0, 7); c.arc(ex + H * .02, ey, Math.max(1, H * .006), 0, 7); c.fill();
+  }
+  c.restore();
+}
+function drawHand(c, x, y, s, rot, a = .85) {
+  c.save(); c.translate(x, y); c.rotate(rot); c.fillStyle = `rgba(105,0,0,${a})`;
+  c.beginPath(); c.ellipse(0, 0, s * .33, s * .4, 0, 0, 7); c.fill();
+  for (let i = 0; i < 4; i++) { c.beginPath(); c.ellipse(-s * .27 + i * s * .18, -s * .62 + Math.abs(i - 1.5) * s * .06, s * .065, s * .24, (i - 1.5) * .08, 0, 7); c.fill(); }
+  c.beginPath(); c.ellipse(s * .42, -s * .02, s * .07, s * .2, -.8, 0, 7); c.fill();
+  for (let i = 0; i < 4; i++) { const dx = -s * .25 + i * s * .16; c.fillRect(dx, s * .2, s * .03, s * (.3 + (i * 37 % 5) * .12)); }
+  c.restore();
+}
+function drawFace(c, w, h, variant, t) {
+  c.fillStyle = '#000'; c.fillRect(0, 0, w, h);
+  const s = Math.min(w, h) * 1.05, cx = w / 2 + (Math.random() - .5) * s * .012, cy = h * .53 + (Math.random() - .5) * s * .01;
+  c.save();
+  if (variant === 'upside') { c.translate(cx, cy); c.rotate(Math.PI + Math.sin(t * 30) * .03); c.translate(-cx, -cy); }
+  const burned = variant === 'burned';
+  if (variant === 'woman' || variant === 'upside') { c.fillStyle = '#060505'; c.beginPath(); c.ellipse(cx, cy - s * .02, s * .44, s * .62, 0, 0, 7); c.fill(); }
+  const g = c.createRadialGradient(cx, cy - s * .1, s * .04, cx, cy, s * .43);
+  g.addColorStop(0, burned ? '#6d4434' : '#d3cdbf'); g.addColorStop(.55, burned ? '#3a2016' : '#918a7d'); g.addColorStop(1, '#141210');
+  c.fillStyle = g; c.beginPath(); c.ellipse(cx, cy, s * .3, s * .41, 0, 0, 7); c.fill();
+  if (burned) {
+    c.strokeStyle = 'rgba(255,110,30,.75)'; c.lineWidth = s * .004; c.shadowColor = '#f60'; c.shadowBlur = 12;
+    for (let i = 0; i < 16; i++) { c.beginPath(); let px = cx + rnd(-.25, .25) * s, py = cy + rnd(-.35, .35) * s; c.moveTo(px, py); for (let k = 0; k < 4; k++) { px += rnd(-.04, .04) * s; py += rnd(-.04, .04) * s; c.lineTo(px, py); } c.stroke(); }
+    c.shadowBlur = 0;
+    c.fillStyle = 'rgba(10,4,2,.7)'; for (let i = 0; i < 7; i++) { c.beginPath(); c.ellipse(cx + rnd(-.2, .2) * s, cy + rnd(-.3, .3) * s, rnd(.03, .08) * s, rnd(.02, .06) * s, rnd(0, 3), 0, 7); c.fill(); }
+  }
+  const ey = cy - s * .08, ex = s * .115;
+  for (const sx of [-1, 1]) {
+    const eg = c.createRadialGradient(cx + sx * ex, ey, 0, cx + sx * ex, ey, s * .1);
+    eg.addColorStop(0, '#000'); eg.addColorStop(.6, 'rgba(0,0,0,.85)'); eg.addColorStop(1, 'rgba(0,0,0,0)');
+    c.fillStyle = eg; c.beginPath(); c.ellipse(cx + sx * ex, ey, s * .1, s * .085, 0, 0, 7); c.fill();
+    if (variant === 'hollow' || burned) {
+      c.fillStyle = '#ff2a1a'; c.shadowColor = '#f00'; c.shadowBlur = 25;
+      c.beginPath(); c.arc(cx + sx * ex, ey, s * .012, 0, 7); c.fill(); c.shadowBlur = 0;
+    } else {
+      c.fillStyle = '#e9e4d6'; c.beginPath(); c.ellipse(cx + sx * ex, ey, s * .045, s * .03, 0, 0, 7); c.fill();
+      c.fillStyle = '#000'; c.beginPath(); c.arc(cx + sx * ex + Math.sin(t * 9) * s * .003, ey, s * .008, 0, 7); c.fill();
+    }
+  }
+  c.fillStyle = 'rgba(0,0,0,.6)';
+  c.beginPath(); c.ellipse(cx - s * .02, cy + s * .06, s * .008, s * .02, .3, 0, 7); c.ellipse(cx + s * .02, cy + s * .06, s * .008, s * .02, -.3, 0, 7); c.fill();
+  if (variant === 'grin' || variant === 'many') {
+    c.fillStyle = '#0a0000'; c.beginPath();
+    c.moveTo(cx - s * .23, cy + s * .1); c.quadraticCurveTo(cx, cy + s * .36, cx + s * .23, cy + s * .1);
+    c.quadraticCurveTo(cx, cy + s * .22, cx - s * .23, cy + s * .1); c.fill();
+    c.fillStyle = '#cfc6b0';
+    for (let i = 0; i < 14; i++) { const u = i / 13, tx = lerp(cx - s * .2, cx + s * .2, u), ty = cy + s * .14 + Math.sin(u * Math.PI) * s * .07; c.beginPath(); c.moveTo(tx - s * .012, ty); c.lineTo(tx + s * .012, ty); c.lineTo(tx, ty + s * .035); c.fill(); }
+  } else if (variant === 'hollow') {
+    c.strokeStyle = '#1a0a08'; c.lineWidth = s * .006; c.beginPath(); c.moveTo(cx - s * .12, cy + s * .2); c.lineTo(cx + s * .12, cy + s * .2); c.stroke();
+    for (let i = 0; i < 9; i++) { const tx = cx - s * .11 + i * s * .0275; c.beginPath(); c.moveTo(tx, cy + s * .18); c.lineTo(tx, cy + s * .22); c.stroke(); }
+  } else {
+    c.fillStyle = '#050000'; c.beginPath(); c.ellipse(cx, cy + s * .22, s * .06, s * .13 + Math.sin(t * 20) * s * .005, 0, 0, 7); c.fill();
+  }
+  if (variant === 'many') {
+    for (let i = 0; i < 9; i++) {
+      const px = cx + rnd(-.22, .22) * s, py = cy + rnd(-.32, .05) * s;
+      c.fillStyle = '#000'; c.beginPath(); c.ellipse(px, py, s * .035, s * .02, 0, 0, 7); c.fill();
+      c.fillStyle = '#ddd'; c.beginPath(); c.arc(px, py, s * .006, 0, 7); c.fill();
+    }
+  }
+  if (variant === 'woman' || variant === 'upside') {
+    c.strokeStyle = 'rgba(5,5,5,.92)'; c.lineWidth = s * .009;
+    for (let i = 0; i < 26; i++) { const x0 = cx + rnd(-.3, .3) * s; c.beginPath(); c.moveTo(x0, cy - s * .42); c.bezierCurveTo(x0 + rnd(-.05, .05) * s, cy - s * .1, x0 + rnd(-.08, .08) * s, cy + s * .1, x0 + rnd(-.1, .1) * s, cy + s * rnd(.2, .5)); c.stroke(); }
+  }
+  c.restore();
+  for (let i = 0; i < 5; i++) { const y = Math.random() * h, sh = rnd(4, 40); try { c.drawImage(c.canvas, 0, y, w, sh, rnd(-40, 40), y, w, sh); } catch (e) { } }
+  c.fillStyle = 'rgba(130,0,0,.2)'; c.fillRect(0, 0, w, h);
+  c.fillStyle = 'rgba(0,0,0,.28)'; for (let y = 0; y < h; y += 3) c.fillRect(0, y, w, 1);
+  const vg = c.createRadialGradient(w / 2, h / 2, Math.min(w, h) * .3, w / 2, h / 2, Math.max(w, h) * .7);
+  vg.addColorStop(0, 'rgba(0,0,0,0)'); vg.addColorStop(1, 'rgba(0,0,0,.95)'); c.fillStyle = vg; c.fillRect(0, 0, w, h);
+}
+
+/* 노이즈 텍스처 (CCTV, 화면 질감) */
+const noiseCv = document.createElement('canvas'); noiseCv.width = 200; noiseCv.height = 120;
+const nctx = noiseCv.getContext('2d'); const nimg = nctx.createImageData(200, 120);
+function updateNoise() { const d = nimg.data; for (let i = 0; i < d.length; i += 4) { const v = Math.random() * 255 | 0; d[i] = d[i + 1] = d[i + 2] = v; d[i + 3] = 255; } nctx.putImageData(nimg, 0, 0); }
+
+/* ===================== 장면 공통 ===================== */
+function polyF(c, w, h, pts, fill) { c.beginPath(); pts.forEach((p, i) => i ? c.lineTo(p.x * w, p.y * h) : c.moveTo(p.x * w, p.y * h)); c.closePath(); c.fillStyle = fill; c.fill(); }
+function figsFor(scene, o) { return o.figs || G.figs.filter(f => f.scene === scene); }
+function drawFigs(c, w, h, list) { for (const f of list) drawFigure(c, f.x * w, f.yb * h, f.h * h, f); }
+function drawScrawl(c, w, h) {
+  const n = Math.floor(G.corruption * G.scrawl.length);
+  for (let i = 0; i < n; i++) {
+    const s = G.scrawl[i]; c.save(); c.translate(s.x * w, s.y * h); c.rotate(s.r);
+    c.font = `${Math.round(s.s * h * 1.6)}px 'Nanum Pen Script', cursive`; c.fillStyle = 'rgba(110,0,0,.55)';
+    c.fillText(s.t, 0, 0); c.fillStyle = 'rgba(110,0,0,.35)'; c.fillRect(s.s * h * .3, 2, 2, s.s * h * 1.2); c.restore();
+  }
+}
+function glint(c, x, y, t, sz) { const a = .25 + .75 * Math.max(0, Math.sin(t * 2.6)); c.save(); c.globalAlpha = a; c.strokeStyle = '#fff6d8'; c.lineWidth = 1.4; c.shadowColor = '#ffe9a0'; c.shadowBlur = 10; c.beginPath(); c.moveTo(x - sz, y); c.lineTo(x + sz, y); c.moveTo(x, y - sz); c.lineTo(x, y + sz); c.stroke(); c.restore(); }
+function lampGlow(c, x, y, r, lv, col = '210,230,215') { if (lv < .05) return; const g = c.createRadialGradient(x, y, 0, x, y, r); g.addColorStop(0, `rgba(${col},${.16 * lv})`); g.addColorStop(1, `rgba(${col},0)`); c.save(); c.globalCompositeOperation = 'lighter'; c.fillStyle = g; c.fillRect(x - r, y - r, r * 2, r * 2); c.restore(); }
+function plate(c, x, y, txt, size, col = '#cfc6b4') { c.font = `700 ${Math.max(7, size)}px 'Nanum Gothic Coding', monospace`; c.textAlign = 'center'; c.fillStyle = col; c.fillText(txt, x, y); c.textAlign = 'left'; }
+
+/* ===================== 1) 로비 ===================== */
+function drawLobby(c, w, h, t, o = {}) {
+  const red = o.red ?? G.scene === 'lobbyRed';
+  let g = c.createLinearGradient(0, 0, 0, h * .72); g.addColorStop(0, red ? '#1d0606' : '#151918'); g.addColorStop(1, red ? '#2c0b0b' : '#242927');
+  c.fillStyle = g; c.fillRect(0, 0, w, h * .72);
+  c.fillStyle = red ? '#220808' : '#1b201e'; c.fillRect(0, h * .55, w, h * .17); c.fillStyle = 'rgba(0,0,0,.4)'; c.fillRect(0, h * .55, w, 2);
+  g = c.createLinearGradient(0, h * .72, 0, h); g.addColorStop(0, red ? '#170505' : '#1d201f'); g.addColorStop(1, '#060707'); c.fillStyle = g; c.fillRect(0, h * .72, w, h * .28);
+  c.strokeStyle = 'rgba(255,255,255,.045)'; c.lineWidth = 1;
+  for (let i = -10; i <= 10; i++) { c.beginPath(); c.moveTo(w * .5 + i * w * .06, h * .72); c.lineTo(w * .5 + i * w * .22, h); c.stroke(); }
+  for (let k = 1; k < 7; k++) { const y = h * .72 + h * .28 * Math.pow(k / 7, 1.6); c.beginPath(); c.moveTo(0, y); c.lineTo(w, y); c.stroke(); }
+  // 천장 등
+  [[.16, 0], [.7, 1]].forEach(([x, i]) => { const lv = red ? .15 : G.lamps[i]; c.fillStyle = `rgba(${lv > .5 ? '225,238,228' : '70,75,72'},${.4 + lv * .6})`; c.fillRect(x * w, 0, w * .14, h * .025); lampGlow(c, (x + .07) * w, h * .05, w * .3, lv); });
+  // 출구 표지
+  c.fillStyle = red ? '#5a0000' : '#0c3a18'; c.fillRect(w * .08, h * .12, w * .07, h * .045);
+  plate(c, w * .115, h * .153, '비상구', h * .028, red ? '#ff5a5a' : '#6fe58f'); lampGlow(c, w * .115, h * .14, w * .06, 1, red ? '255,40,40' : '60,220,110');
+  // 간판
+  c.fillStyle = '#121a15'; c.fillRect(w * .37, h * .16, w * .26, h * .065); c.strokeStyle = '#2e3a32'; c.strokeRect(w * .37, h * .16, w * .26, h * .065);
+  const signOn = red ? (Math.sin(t * 13) > .2) : G.lamps[0] > .5;
+  plate(c, w * .5, h * .205, '청 운 병 원   응급 · 접수', h * .03, signOn ? '#a7d5b4' : '#3b4a40');
+  // 유리문
+  const X0 = w * .4, Y0 = h * .26, DW = w * .2, DH = h * .46;
+  g = c.createLinearGradient(0, Y0, 0, Y0 + DH); g.addColorStop(0, red ? '#22252b' : '#04070b'); g.addColorStop(1, red ? '#0f1013' : '#080b0f'); c.fillStyle = g; c.fillRect(X0, Y0, DW, DH);
+  lampGlow(c, X0 + DW * .3, Y0 + DH * .2, DW * .6, red ? 1.4 : .6, red ? '120,130,160' : '120,140,170');
+  if (G.flags.door13 && red) drawFigure(c, X0 + DW * .62, Y0 + DH * 1.02, DH * .95, { eyes: Math.sin(t * .7) > .6, alpha: .97 });
+  c.strokeStyle = 'rgba(150,170,195,.22)'; c.lineWidth = 1;
+  for (let i = 0; i < 70; i++) { const rx = (i * .1379) % 1, ry = (t * 1.7 + i * .371) % 1; c.beginPath(); c.moveTo(X0 + rx * DW, Y0 + ry * DH); c.lineTo(X0 + rx * DW - 3, Y0 + ry * DH + h * .035); c.stroke(); }
+  c.fillStyle = 'rgba(255,255,255,.035)'; c.beginPath(); c.moveTo(X0, Y0); c.lineTo(X0 + DW * .35, Y0); c.lineTo(X0, Y0 + DH * .6); c.fill();
+  c.strokeStyle = '#3b3f42'; c.lineWidth = Math.max(3, w * .007); c.strokeRect(X0, Y0, DW, DH);
+  c.beginPath(); c.moveTo(X0 + DW / 2, Y0); c.lineTo(X0 + DW / 2, Y0 + DH); c.stroke();
+  c.fillStyle = '#5a5e61'; c.fillRect(X0 + DW / 2 - w * .012, Y0 + DH * .45, w * .006, DH * .12); c.fillRect(X0 + DW / 2 + w * .006, Y0 + DH * .45, w * .006, DH * .12);
+  if (G.flags.glassPrint) { drawHand(c, X0 + DW * .3, Y0 + DH * .4, DH * .14, -.2, .6); drawHand(c, X0 + DW * .7, Y0 + DH * .35, DH * .13, .25, .5); }
+  if (G.flags.manyPrints) for (let i = 0; i < 14; i++) drawHand(c, X0 + DW * ((i * .37) % 1), Y0 + DH * (.15 + ((i * .53) % .7)), DH * .1, (i % 5 - 2) * .3, .55);
+  // 벽시계
+  const cx = w * .75, cy = h * .14, r = h * .05;
+  c.fillStyle = '#bdb6a5'; c.beginPath(); c.arc(cx, cy, r, 0, 7); c.fill(); c.strokeStyle = '#2b2b2b'; c.lineWidth = 3; c.stroke();
+  const [hh, mm] = G.clock.split(':').map(Number), sec = (G.flags.clockRev ? -t : t) * 6;
+  const hand = (ang, len, wd) => { c.lineWidth = wd; c.beginPath(); c.moveTo(cx, cy); c.lineTo(cx + Math.sin(ang) * len, cy - Math.cos(ang) * len); c.stroke(); };
+  c.strokeStyle = '#111'; hand(((hh % 12) + mm / 60) / 12 * Math.PI * 2, r * .5, 3); hand(mm / 60 * Math.PI * 2, r * .78, 2);
+  c.strokeStyle = '#8a0000'; hand(sec * Math.PI / 180, r * .85, 1);
+  // 접수 데스크
+  polyF(c, w, h, [{ x: .64, y: .56 }, { x: 1, y: .54 }, { x: 1, y: .6 }, { x: .62, y: .62 }], '#3a2e24');
+  polyF(c, w, h, [{ x: .62, y: .62 }, { x: 1, y: .6 }, { x: 1, y: .88 }, { x: .62, y: .86 }], '#211a15');
+  c.strokeStyle = 'rgba(0,0,0,.5)'; for (let i = 1; i < 5; i++) { c.beginPath(); c.moveTo(w * (.62 + i * .076), h * (.62 - i * .004)); c.lineTo(w * (.62 + i * .076), h * (.86 + i * .004)); c.stroke(); }
+  if (!red) { polyF(c, w, h, [{ x: .745, y: .535 }, { x: .845, y: .53 }, { x: .85, y: .575 }, { x: .74, y: .58 }], '#a69d86'); c.fillStyle = '#6a0f0f'; c.fillRect(w * .79, h * .53, w * .006, h * .06); }
+  // 벤치
+  c.fillStyle = '#2b2522'; c.fillRect(w * .06, h * .66, w * .24, h * .03); c.fillStyle = '#1e1a18'; c.fillRect(w * .06, h * .6, w * .24, h * .04);
+  c.fillStyle = '#111'; [.08, .27].forEach(x => c.fillRect(w * x, h * .69, w * .01, h * .08));
+  if (G.chapter === 1 && !G.fragments.has('f1')) glint(c, w * .17, h * .8, t, h * .012);
+  if (red) {
+    c.fillStyle = '#1c1612'; c.fillRect(w * .08, h * .24, w * .16, h * .2); c.strokeStyle = '#4a3a2a'; c.strokeRect(w * .08, h * .24, w * .16, h * .2);
+    c.strokeStyle = '#8a2020'; c.lineWidth = 2; c.beginPath(); for (let i = 0; i < 4; i++) { c.moveTo(w * (.095 + i * .04), h * .27); c.lineTo(w * (.095 + i * .04), h * .41); } for (let j = 0; j < 3; j++) { c.moveTo(w * .095, h * (.27 + j * .07)); c.lineTo(w * .215, h * (.27 + j * .07)); } c.stroke();
+    plate(c, w * .16, h * .265, '비상 대피도', h * .02, '#d9c9a8');
+    c.fillStyle = '#16191b'; c.fillRect(w * .62, h * .42, w * .05, h * .12); c.fillStyle = Math.sin(t * 5) > 0 ? '#ff2a2a' : '#5a0000'; c.fillRect(w * .635, h * .435, w * .02, h * .012);
+    for (let i = 0; i < 9; i++) { c.fillStyle = '#333'; c.fillRect(w * (.628 + (i % 3) * .012), h * (.46 + Math.floor(i / 3) * .022), w * .009, h * .016); }
+    g = c.createLinearGradient(w * .29, 0, w * .35, 0); g.addColorStop(0, '#20262a'); g.addColorStop(1, '#0c0f11'); c.fillStyle = g; c.fillRect(w * .29, h * .22, w * .06, h * .26); c.strokeStyle = '#4a3b2b'; c.lineWidth = 3; c.strokeRect(w * .29, h * .22, w * .06, h * .26);
+    if (!G.fragments.has('f5')) glint(c, w * .32, h * .3, t + 1, h * .01);
+    c.fillStyle = `rgba(255,0,0,${.05 + .05 * Math.sin(t * 4)})`; c.fillRect(0, 0, w, h);
+  }
+  drawFigs(c, w, h, figsFor('lobby', o));
+  drawScrawl(c, w, h);
+}
+
+/* ===================== 2) 경비실 (CCTV실) ===================== */
+function drawOffice(c, w, h, t, o = {}) {
+  let g = c.createLinearGradient(0, 0, 0, h); g.addColorStop(0, '#121514'); g.addColorStop(1, '#1b1e1d'); c.fillStyle = g; c.fillRect(0, 0, w, h);
+  // 창문 (복도)
+  const WX = w * .02, WY = h * .14, WW = w * .18, WH = h * .46;
+  g = c.createLinearGradient(0, WY, 0, WY + WH); g.addColorStop(0, '#1d2724'); g.addColorStop(1, '#0d1110'); c.fillStyle = g; c.fillRect(WX, WY, WW, WH);
+  c.save(); c.beginPath(); c.rect(WX, WY, WW, WH); c.clip();
+  lampGlow(c, WX + WW * .5, WY, WW * 1.2, G.lamps[2], '180,210,190');
+  drawFigs(c, w, h, figsFor('office', o));
+  c.fillStyle = 'rgba(0,0,0,.45)'; for (let i = 0; i < 12; i++) c.fillRect(WX, WY + i * WH / 12, WW, WH / 30);
+  c.restore();
+  c.strokeStyle = '#3a3d3c'; c.lineWidth = 4; c.strokeRect(WX, WY, WW, WH);
+  // 모니터 벽
+  const MX = w * .26, MY = h * .1, MW = w * .48, MH = h * .42;
+  c.fillStyle = '#0a0b0b'; c.fillRect(MX - 6, MY - 6, MW + 12, MH + 12);
+  for (let r = 0; r < 2; r++) for (let k = 0; k < 3; k++) {
+    const x = MX + k * MW / 3 + 4, y = MY + r * MH / 2 + 4, sw = MW / 3 - 8, sh = MH / 2 - 8, idx = r * 3 + k;
+    c.fillStyle = '#161a18'; c.fillRect(x, y, sw, sh);
+    c.globalAlpha = .9; c.fillStyle = '#273029'; c.fillRect(x, y, sw, sh);
+    c.strokeStyle = 'rgba(160,200,170,.25)'; c.lineWidth = 1; c.beginPath();
+    c.moveTo(x, y); c.lineTo(x + sw * .42, y + sh * .4); c.moveTo(x + sw, y); c.lineTo(x + sw * .58, y + sh * .4); c.moveTo(x, y + sh); c.lineTo(x + sw * .42, y + sh * .6); c.moveTo(x + sw, y + sh); c.lineTo(x + sw * .58, y + sh * .6); c.stroke();
+    c.strokeRect(x + sw * .42, y + sh * .4, sw * .16, sh * .2);
+    if (idx === 2 && G.flags.monFig) drawFigure(c, x + sw * .5, y + sh * .62, sh * .3, { eyes: true });
+    c.globalAlpha = .3; c.drawImage(noiseCv, ri(0, 100), ri(0, 60), 100, 60, x, y, sw, sh); c.globalAlpha = 1;
+    if (idx === 4 && !G.solved.has('p4')) { c.fillStyle = '#000'; c.fillRect(x, y, sw, sh); plate(c, x + sw / 2, y + sh / 2, 'NO SIGNAL', sh * .12, '#c33'); }
+    plate(c, x + sw * .2, y + sh * .14, 'CAM 0' + (idx + 1), sh * .09, '#9fe0a8');
+    lampGlow(c, x + sw / 2, y + sh / 2, sw * .9, .5, '140,190,150');
+  }
+  // 책상
+  g = c.createLinearGradient(0, h * .62, 0, h); g.addColorStop(0, '#2d241c'); g.addColorStop(1, '#0e0b09'); c.fillStyle = g; c.fillRect(0, h * .62, w, h * .38);
+  c.fillStyle = '#4a3b2e'; c.fillRect(0, h * .62, w, 3);
+  // 방문자 명부
+  polyF(c, w, h, [{ x: .15, y: .69 }, { x: .25, y: .675 }, { x: .25, y: .79 }, { x: .14, y: .81 }], '#b4aa92');
+  polyF(c, w, h, [{ x: .25, y: .675 }, { x: .35, y: .69 }, { x: .36, y: .81 }, { x: .25, y: .79 }], '#a89e86');
+  c.strokeStyle = 'rgba(60,40,30,.5)'; for (let i = 1; i < 8; i++) { c.beginPath(); c.moveTo(w * .155, h * (.69 + i * .014)); c.lineTo(w * .24, h * (.678 + i * .014)); c.moveTo(w * .26, h * (.678 + i * .014)); c.lineTo(w * .345, h * (.69 + i * .014)); c.stroke(); }
+  if (!G.logUnlocked) { c.strokeStyle = '#5a1010'; c.lineWidth = 3; c.beginPath(); c.moveTo(w * .14, h * .74); c.lineTo(w * .36, h * .75); c.stroke(); }
+  // 전화기, 머그
+  c.fillStyle = '#111'; c.fillRect(w * .42, h * .68, w * .08, h * .06); c.fillStyle = '#1c1c1c'; c.fillRect(w * .425, h * .665, w * .07, h * .02);
+  c.fillStyle = '#d9d0bf'; c.fillRect(w * .53, h * .66, w * .025, h * .05);
+  // 인터폰
+  c.fillStyle = '#2a2c2e'; c.fillRect(w * .8, h * .36, w * .1, h * .2); c.strokeStyle = '#444'; c.strokeRect(w * .8, h * .36, w * .1, h * .2);
+  c.fillStyle = '#0c0c0c'; for (let i = 0; i < 5; i++) for (let j = 0; j < 4; j++) { c.beginPath(); c.arc(w * (.82 + i * .015), h * (.39 + j * .022), h * .005, 0, 7); c.fill(); }
+  c.fillStyle = (Math.sin(t * 4) > 0 && !G.solved.has('p5')) ? '#ff2020' : '#400'; c.beginPath(); c.arc(w * .85, h * .53, h * .01, 0, 7); c.fill();
+  // 서랍
+  c.fillStyle = '#1a1410'; c.fillRect(w * .58, h * .8, w * .1, h * .06); c.fillStyle = '#555'; c.fillRect(w * .62, h * .825, w * .02, h * .01);
+  if (!G.fragments.has('f2')) glint(c, w * .64, h * .8, t, h * .01);
+  drawScrawl(c, w, h);
+}
+
+/* ===================== 3) 3층 복도 ===================== */
+const CW = {
+  L: (d, v) => ({ x: .42 * d, y: lerp(.33 * d, 1 - .43 * d, v) }),
+  R: (d, v) => ({ x: 1 - .42 * d, y: lerp(.33 * d, 1 - .43 * d, v) })
+};
+const quad = (s, d1, d2, v1, v2) => { const f = CW[s]; return [f(d1, v1), f(d2, v1), f(d2, v2), f(d1, v2)]; };
+const bbox = q => { const xs = q.map(p => p.x), ys = q.map(p => p.y); const x = Math.min(...xs), y = Math.min(...ys); return { x, y, w: Math.max(...xs) - x, h: Math.max(...ys) - y }; };
+const CORR = {
+  doors: [['L', .06, .24, '307'], ['L', .5, .6, '305'], ['L', .68, .74, '303'], ['R', .64, .72, '308']],
+  board: ['L', .3, .42, .28, .55], station: ['R', .04, .26, .6, 1], elev: ['R', .38, .56, .22, 1]
+};
+function drawCorridor(c, w, h, t, o = {}) {
+  let g = c.createLinearGradient(0, 0, 0, h * .33); g.addColorStop(0, '#1d2120'); g.addColorStop(1, '#0a0b0b');
+  polyF(c, w, h, [{ x: 0, y: 0 }, { x: 1, y: 0 }, { x: .58, y: .33 }, { x: .42, y: .33 }], g);
+  g = c.createLinearGradient(0, h, 0, h * .57); g.addColorStop(0, '#252826'); g.addColorStop(1, '#060707');
+  polyF(c, w, h, [{ x: 0, y: 1 }, { x: 1, y: 1 }, { x: .58, y: .57 }, { x: .42, y: .57 }], g);
+  g = c.createLinearGradient(0, 0, w * .42, 0); g.addColorStop(0, '#2d322f'); g.addColorStop(1, '#0a0b0b');
+  polyF(c, w, h, [{ x: 0, y: 0 }, { x: .42, y: .33 }, { x: .42, y: .57 }, { x: 0, y: 1 }], g);
+  g = c.createLinearGradient(w, 0, w * .58, 0); g.addColorStop(0, '#2a2f2c'); g.addColorStop(1, '#0a0b0b');
+  polyF(c, w, h, [{ x: 1, y: 0 }, { x: .58, y: .33 }, { x: .58, y: .57 }, { x: 1, y: 1 }], g);
+  polyF(c, w, h, [{ x: .42, y: .33 }, { x: .58, y: .33 }, { x: .58, y: .57 }, { x: .42, y: .57 }], o.endLit || G.flags.endLit ? '#122019' : '#030404');
+  c.fillStyle = '#0d3b1a'; c.fillRect(w * .485, h * .345, w * .03, h * .018); lampGlow(c, w * .5, h * .36, w * .05, 1, '60,220,110');
+  c.strokeStyle = 'rgba(255,255,255,.04)'; c.lineWidth = 1;
+  for (let i = -6; i <= 6; i++) { c.beginPath(); c.moveTo(w * (.5 + i * .013), h * .57); c.lineTo(w * (.5 + i * .17), h); c.stroke(); }
+  for (let k = 1; k < 9; k++) { const d = 1 - Math.pow(k / 9, .7); const p = CW.L(d, 1), q = CW.R(d, 1); c.beginPath(); c.moveTo(p.x * w, p.y * h); c.lineTo(q.x * w, q.y * h); c.stroke(); }
+  for (const s of ['L', 'R']) { const a = CW[s](0, .55), b = CW[s](1, .55); c.strokeStyle = '#3a3f3c'; c.lineWidth = 3; c.beginPath(); c.moveTo(a.x * w, a.y * h); c.lineTo(b.x * w, b.y * h); c.stroke(); }
+  // 천장 등
+  [.06, .28, .5, .72].forEach((d, i) => {
+    const lv = o.cctv ? .8 : G.lamps[i + 1];
+    const a = CW.L(d, 0), b = CW.R(d, 0), a2 = CW.L(d + .06, 0), b2 = CW.R(d + .06, 0);
+    const pts = [{ x: lerp(a.x, b.x, .4), y: a.y }, { x: lerp(a.x, b.x, .6), y: a.y }, { x: lerp(a2.x, b2.x, .6), y: a2.y + .004 }, { x: lerp(a2.x, b2.x, .4), y: a2.y + .004 }];
+    polyF(c, w, h, pts, lv > .5 ? `rgba(225,240,228,${.5 + lv * .5})` : '#2a2e2c');
+    const fy = CW.L(d + .05, 1).y; lampGlow(c, w * .5, fy * h, w * .32 * (1 - d * .7), lv);
+  });
+  // 문
+  CORR.doors.forEach(([s, d1, d2, num]) => {
+    const q = quad(s, d1, d2, .22, 1); const opn = num === '307' && G.flags.door307open;
+    polyF(c, w, h, q, opn ? '#020202' : '#1c1714');
+    c.strokeStyle = '#3a332c'; c.lineWidth = 2; c.beginPath(); q.forEach((p, i) => i ? c.lineTo(p.x * w, p.y * h) : c.moveTo(p.x * w, p.y * h)); c.closePath(); c.stroke();
+    const m = CW[s]((d1 + d2) / 2, .3); plate(c, m.x * w, m.y * h, num, h * .045 * (1 - (d1 + d2) / 2 * .8), '#bfb6a2');
+    if (num === '307' && G.flags.prints307) { const p = CW[s](d1 + .05, .55); drawHand(c, p.x * w, p.y * h, h * .08, .2, .7); drawHand(c, p.x * w + w * .03, p.y * h + h * .1, h * .07, -.3, .6); }
+  });
+  // 게시판
+  { const [s, d1, d2, v1, v2] = CORR.board; const q = quad(s, d1, d2, v1, v2); polyF(c, w, h, q, '#2b2117'); for (let i = 0; i < 4; i++) { const p = CW[s](d1 + .02 + i * .025, v1 + .1); c.fillStyle = '#9a917c'; c.fillRect(p.x * w, p.y * h, w * .012, h * .04); } }
+  // 간호사 스테이션
+  { const [s, d1, d2, v1, v2] = CORR.station; polyF(c, w, h, quad(s, d1, d2, v1, v2), '#24221f'); polyF(c, w, h, quad(s, d1, d2, v1 - .03, v1), '#3e3c37'); const p = CW[s](d1 + .1, v1 - .02); c.fillStyle = '#b0a790'; c.fillRect(p.x * w - w * .05, p.y * h - h * .03, w * .05, h * .035); }
+  // 엘리베이터
+  { const [s, d1, d2, v1, v2] = CORR.elev; const q = quad(s, d1, d2, v1, v2); const op = G.flags.elevOpen;
+    g = c.createLinearGradient(q[0].x * w, 0, q[1].x * w, 0); g.addColorStop(0, '#3e4244'); g.addColorStop(1, '#1d1f20'); polyF(c, w, h, q, op ? '#0b0d0c' : g);
+    const m1 = CW[s]((d1 + d2) / 2, v1), m2 = CW[s]((d1 + d2) / 2, v2); c.strokeStyle = '#111'; c.lineWidth = 2; c.beginPath(); c.moveTo(m1.x * w, m1.y * h); c.lineTo(m2.x * w, m2.y * h); c.stroke();
+    const ind = CW[s]((d1 + d2) / 2, v1 - .05); c.fillStyle = '#000'; c.fillRect(ind.x * w - w * .015, ind.y * h - h * .025, w * .03, h * .03); plate(c, ind.x * w, ind.y * h, G.flags.elevFloor || '3', h * .025, '#f33'); }
+  if (G.chapter === 3 && !G.fragments.has('f3')) glint(c, w * .6, h * .9, t, h * .012);
+  if (G.corruption > .25) { c.fillStyle = 'rgba(80,0,0,.5)'; c.beginPath(); c.moveTo(w * .45, h); c.quadraticCurveTo(w * .25, h * .9, w * .12, h * .92); c.lineTo(w * .1, h * .95); c.quadraticCurveTo(w * .3, h * .96, w * .4, h); c.fill(); }
+  drawFigs(c, w, h, figsFor('corridor', o));
+  const fog = c.createRadialGradient(w * .5, h * .45, 0, w * .5, h * .45, w * .32); fog.addColorStop(0, 'rgba(0,0,0,.75)'); fog.addColorStop(1, 'rgba(0,0,0,0)'); c.fillStyle = fog; c.fillRect(0, 0, w, h);
+  if (!o.cctv) drawScrawl(c, w, h);
+}
+
+/* ===================== 4) 지하 기록 보관실 · 영안실 ===================== */
+function drawBasement(c, w, h, t, o = {}) {
+  let g = c.createLinearGradient(0, 0, 0, h * .78); g.addColorStop(0, '#101316'); g.addColorStop(1, '#1b1f22'); c.fillStyle = g; c.fillRect(0, 0, w, h * .78);
+  c.fillStyle = 'rgba(255,255,255,.02)'; for (let i = 0; i < 14; i++) c.fillRect(0, h * (.05 * i + .02), w, 1);
+  g = c.createLinearGradient(0, h * .78, 0, h); g.addColorStop(0, '#121315'); g.addColorStop(1, '#050505'); c.fillStyle = g; c.fillRect(0, h * .78, w, h * .22);
+  c.strokeStyle = '#2b2a27'; c.lineWidth = h * .025; c.beginPath(); c.moveTo(0, h * .05); c.lineTo(w, h * .05); c.stroke(); c.lineWidth = h * .015; c.beginPath(); c.moveTo(0, h * .095); c.lineTo(w, h * .095); c.stroke();
+  const bx = w * .5 + Math.sin(t * .9) * w * .06, by = h * .15;
+  c.strokeStyle = '#111'; c.lineWidth = 1; c.beginPath(); c.moveTo(w * .5, 0); c.lineTo(bx, by); c.stroke();
+  const lv = o.cctv ? .8 : G.lamps[0]; c.fillStyle = lv > .4 ? '#ffe7b0' : '#3a3220'; c.beginPath(); c.arc(bx, by + h * .012, h * .014, 0, 7); c.fill();
+  lampGlow(c, bx, by + h * .15, w * .55, lv * 1.2, '255,220,160');
+  for (let i = 0; i < 3; i++) {
+    const x = w * (.03 + i * .085); c.fillStyle = '#2a2d2f'; c.fillRect(x, h * .25, w * .08, h * .55); c.strokeStyle = '#151718'; c.strokeRect(x, h * .25, w * .08, h * .55);
+    for (let j = 0; j < 4; j++) { c.strokeRect(x + 3, h * (.26 + j * .135), w * .08 - 6, h * .125); c.fillStyle = '#777'; c.fillRect(x + w * .03, h * (.31 + j * .135), w * .02, h * .008); c.fillStyle = '#b5ab92'; c.fillRect(x + w * .028, h * (.275 + j * .135), w * .024, h * .02); }
+  }
+  if (!G.fragments.has('f4')) { c.fillStyle = '#c8bea4'; c.fillRect(w * .272, h * .59, w * .035, h * .035); glint(c, w * .29, h * .6, t, h * .01); }
+  c.fillStyle = '#2f3336'; c.fillRect(w * .36, h * .2, w * .28, h * .42);
+  for (let r = 0; r < 3; r++) for (let k = 0; k < 3; k++) {
+    const x = w * (.37 + k * .09), y = h * (.215 + r * .135), sw = w * .08, sh = h * .12;
+    const open = G.flags.drawerOpen && r === 1 && k === 1;
+    c.fillStyle = open ? '#050505' : '#3b4043'; c.fillRect(x, y, sw, sh); c.strokeStyle = '#1a1c1e'; c.lineWidth = 2; c.strokeRect(x, y, sw, sh);
+    if (open) { c.fillStyle = '#5a5f62'; c.fillRect(x - sw * .08, y + sh * .6, sw * 1.16, sh * .25); c.fillStyle = '#cfc8b8'; c.beginPath(); c.ellipse(x + sw * .5, y + sh * .6, sw * .4, sh * .14, 0, 0, 7); c.fill(); }
+    else { c.fillStyle = '#888'; c.fillRect(x + sw * .3, y + sh * .7, sw * .4, sh * .07); c.fillStyle = '#d6cdb6'; c.fillRect(x + sw * .35, y + sh * .2, sw * .3, sh * .16); }
+  }
+  g = c.createLinearGradient(w * .73, h * .18, w * .88, h * .56); g.addColorStop(0, '#1e262b'); g.addColorStop(.5, '#0b0f12'); g.addColorStop(1, '#161c20');
+  c.fillStyle = '#3a2e22'; c.fillRect(w * .72, h * .17, w * .17, h * .4); c.fillStyle = g; c.fillRect(w * .735, h * .185, w * .14, h * .37);
+  drawFigure(c, w * .805, h * .6, h * .32, { alpha: .45, color: '#050708' });
+  if (G.flags.mirrorCrack) { c.strokeStyle = 'rgba(220,230,240,.5)'; c.lineWidth = 1; c.beginPath(); const mx = w * .79, my = h * .33; for (let i = 0; i < 9; i++) { c.moveTo(mx, my); c.lineTo(mx + Math.cos(i * .7) * w * .07, my + Math.sin(i * .7) * h * .16); } c.stroke(); }
+  c.fillStyle = '#2a2219'; c.fillRect(w * .58, h * .7, w * .32, h * .04); c.fillStyle = '#17120d'; c.fillRect(w * .6, h * .74, w * .015, h * .18); c.fillRect(w * .86, h * .74, w * .015, h * .18);
+  c.fillStyle = '#5a1010'; c.fillRect(w * .66, h * .675, w * .12, h * .035); plate(c, w * .72, h * .7, '기 밀', h * .022, '#e9c0b0');
+  c.fillStyle = 'rgba(120,140,160,.08)'; c.beginPath(); c.ellipse(w * .45, h * .9, w * .12, h * .025, 0, 0, 7); c.fill();
+  drawFigs(c, w, h, figsFor('basement', o));
+  drawScrawl(c, w, h);
+}
+
+const SCENES = { lobby: drawLobby, lobbyRed: drawLobby, office: drawOffice, corridor: drawCorridor, basement: drawBasement };
+
+/* ===================== 엔진: 화면 크기 · 렌더 루프 ===================== */
+const UI = { dlgClick: null, onChoice: null, capT: null, toastT: null };
+const stage = $('#stage'), sceneCv = $('#scene'), sctx = sceneCv.getContext('2d');
+function fit(cv) {
+  const r = cv.getBoundingClientRect(), dpr = Math.min(2, window.devicePixelRatio || 1);
+  const W = Math.max(2, Math.round(r.width * dpr)), H = Math.max(2, Math.round(r.height * dpr));
+  if (cv.width !== W || cv.height !== H) { cv.width = W; cv.height = H; }
+}
+function layout() {
+  const m = $('#main').getBoundingClientRect();
+  let w = m.width, h = w / 1.6;
+  if (h > m.height) { h = m.height; w = h * 1.6; }
+  stage.style.width = w + 'px'; stage.style.height = h + 'px';
+  stage.style.setProperty('--fr', Math.max(70, w * .13) + 'px');
+}
+window.addEventListener('resize', layout);
+
+let lastT = performance.now(), hudAcc = 0, noiseFrame = 0;
+function loop(now) {
+  const dt = Math.min(.1, (now - lastT) / 1000); lastT = now; const t = now / 1000;
+  if (++noiseFrame % 2 === 0) { updateNoise(); drawGrain(); }
+  if (G.running && !G.paused) { G.playTime += dt; ambient(dt); }
+  lights(dt);
+  if (G.running) {
+    fit(sceneCv);
+    const w = sceneCv.width, h = sceneCv.height;
+    sctx.clearRect(0, 0, w, h);
+    try { (SCENES[G.scene] || drawLobby)(sctx, w, h, t); } catch (e) { sctx.fillStyle = '#080808'; sctx.fillRect(0, 0, w, h); }
+    G.fx = G.fx.filter(f => { const p = (now - f.t0) / f.dur; if (p >= 1) return false; try { f.draw(sctx, w, h, p, t); } catch (e) { } return true; });
+    hudAcc += dt; if (hudAcc > .25) { hudAcc = 0; hud(); }
+  }
+  if (!$('#title').classList.contains('hide')) drawTitle(t);
+  requestAnimationFrame(loop);
+}
+const grainCv = $('#grain'), gctx = grainCv.getContext('2d');
+function drawGrain() { gctx.drawImage(noiseCv, ri(0, 40), ri(0, 20), 160, 100, 0, 0, 160, 100); }
+const titleCv = $('#titleCv'), tctx = titleCv.getContext('2d');
+function drawTitle(t) {
+  fit(titleCv); const w = titleCv.width, h = titleCv.height;
+  const show = Math.sin(t * .5) > .85;
+  drawCorridor(tctx, w, h, t, { cctv: true, figs: show ? [{ x: .5, yb: .6, h: .22, eyes: true, alpha: .9 }] : [] });
+  if (Math.random() < .05) { tctx.fillStyle = 'rgba(0,0,0,.8)'; tctx.fillRect(0, 0, w, h); }
+}
+
+function lights(dt) {
+  const p = .003 + G.corruption * .02;
+  if (G.flick > 0) G.flick -= dt; else if (Math.random() < p) { G.flick = rnd(.05, .25); G.flickLv = rnd(.05, .55); if (Math.random() < .3) AU.noise(.05, { ft: 'highpass', f: 3000, g: .04 }); }
+  let L = G.baseLight * (G.flick > 0 ? G.flickLv : 1);
+  if (G.forcedDark) L = G.darkLevel;
+  G.light += (L - G.light) * Math.min(1, dt * 35);
+  $('#dark').style.opacity = clamp(1 - G.light, 0, 1).toFixed(3);
+  AU.humLevel(G.light);
+  for (let i = 0; i < G.lamps.length; i++) {
+    if (Math.random() < .004 + G.corruption * .012) G.lamps[i] = rnd(0, .4);
+    else G.lamps[i] += (1 - G.lamps[i]) * dt * 3;
+    if (G.chapter >= 3 && i === 3) G.lamps[i] = Math.random() < .1 ? .9 : .05;
+  }
+}
+
+/* 무작위 배경 이벤트: 발소리, 먼 문소리, 기계음, 그리고 가끔 예고 없는 점프스케어 */
+function ambient(dt) {
+  if (G.scene !== 'none') {
+    G.beepT -= dt; if (G.beepT <= 0 && G.chapter !== 4) { AU.beep(); G.beepT = G.flags.beepStop ? 99 : 1.4; }
+  }
+  if (G.busy || anyModal()) return;
+  G.ambientT -= dt;
+  if (G.ambientT <= 0) {
+    G.ambientT = rnd(16, 34);
+    const ev = pick(['steps', 'steps', 'door', 'whisper', 'knock', 'creak', 'drip']);
+    if (ev === 'steps') { AU.footsteps(ri(4, 8), { approach: Math.random() < .5 }); cap(pick(['(어딘가에서 발소리가 들린다)', '(위층 복도를 걷는 소리)', '(발소리가… 멈췄다)'])); }
+    if (ev === 'door') { AU.door(); cap('(멀리서 문이 닫히는 소리)'); }
+    if (ev === 'whisper') { AU.whisper(1.4); cap('(속삭이는 소리)'); }
+    if (ev === 'knock') { AU.knock(ri(2, 4), 0, .25); cap('(어딘가에서 노크 소리)'); }
+    if (ev === 'creak') { AU.creak(); cap('(바닥이 삐걱거린다)'); }
+    if (ev === 'drip') { for (let i = 0; i < 4; i++) setTimeout(() => AU.drip(), i * 700); cap('(물방울 떨어지는 소리)'); }
+  }
+  G.scareT -= dt;
+  if (G.scareT <= 0 && G.chapter >= 2) {
+    G.scareT = rnd(95, 150);
+    G.busy = true; lockHs();
+    const f = pick([SC.peek, SC.shadowRun, SC.peek]);
+    f().catch(swallow).finally(() => { G.busy = false; lockHs(); });
+  }
+}
+function anyModal() { return !!document.querySelector('.modal.on') || $('#cctv').classList.contains('on') || $('#dialog').classList.contains('on'); }
+
+/* 마우스 = 손전등 + 시점 이동 */
+function aim(x, y) {
+  const r = stage.getBoundingClientRect(); if (!r.width) return;
+  const px = clamp((x - r.left) / r.width, 0, 1), py = clamp((y - r.top) / r.height, 0, 1);
+  stage.style.setProperty('--mx', (px * 100).toFixed(1) + '%'); stage.style.setProperty('--my', (py * 100).toFixed(1) + '%');
+  $('#parallax').style.transform = `translate(${(.5 - px) * 2.2}%, ${(.5 - py) * 1.6}%)`;
+}
+window.addEventListener('mousemove', e => aim(e.clientX, e.clientY));
+window.addEventListener('touchstart', e => { const t = e.touches[0]; if (t) aim(t.clientX, t.clientY); }, { passive: true });
+window.addEventListener('touchmove', e => { const t = e.touches[0]; if (t) aim(t.clientX, t.clientY); }, { passive: true });
+
+/* ===================== HUD ===================== */
+const CH_NAMES = ['', '병원 입장', '첫 번째 방문자', '이상 현상', '13번째 방문자', '최종 선택'];
+function hud() {
+  $('#hChap').innerHTML = `<small>${G.chapter}장</small>${CH_NAMES[G.chapter] || ''}`;
+  $('#hClock').textContent = G.clock;
+  $('#hTime').textContent = fmtTime(G.playTime);
+  $('#hOk').textContent = G.correct; $('#hNg').textContent = G.wrong;
+  $('#sanFill').style.transform = `scaleX(${G.sanity / 100})`;
+  $('#clueN').textContent = G.clues.length + G.fragments.size;
+  $('#bLog').classList.toggle('dis', !G.logUnlocked);
+  const s = G.sanity;
+  stage.style.filter = s < 60 ? `contrast(${1 + (60 - s) / 120}) saturate(${1 - (60 - s) / 120})` : '';
+  AU.setTension((100 - s) / 100 * .6 + G.corruption * .5);
+}
+function setObjective(t) { $('#objective').textContent = t; G.objective = t; }
+function sanity(d) { G.sanity = clamp(G.sanity + d, 5, 100); hud(); }
+
+/* ===================== 자막 · 알림 ===================== */
+function cap(t) { const e = $('#caption'); e.textContent = t; e.style.opacity = 1; clearTimeout(UI.capT); UI.capT = setTimeout(() => e.style.opacity = 0, 2800); }
+function toast(t) { const e = $('#toast'); e.innerHTML = t; e.classList.add('on'); clearTimeout(UI.toastT); UI.toastT = setTimeout(() => e.classList.remove('on'), 3200); }
+
+/* ===================== 대사 ===================== */
+const strip = s => s.replace(/\{\/?[rq]\}/g, '');
+const fmtTxt = s => s.replace(/\{r\}/g, '<span class="r">').replace(/\{q\}/g, '<span class="q">').replace(/\{\/[rq]\}/g, '</span>');
+function say(text, who = '') {
+  return guard(res => {
+    const d = $('#dialog'); d.classList.add('on'); $('#dlgWho').textContent = who;
+    const el = $('#dlgText'), plain = strip(text); el.textContent = ''; $('#dlgNext').style.visibility = 'hidden';
+    let i = 0, typing = true;
+    const id = setInterval(() => { if (G.paused) return; i += 1; el.textContent = plain.slice(0, i); if (i >= plain.length) finish(); }, 26);
+    function finish() { clearInterval(id); typing = false; el.innerHTML = fmtTxt(text); $('#dlgNext').style.visibility = 'visible'; }
+    UI.dlgClick = () => { if (typing) { finish(); return; } UI.dlgClick = null; d.classList.remove('on'); res(); };
+  });
+}
+async function narr(lines, who = '') { for (const l of lines) await say(l, who); }
+$('#dialog').addEventListener('click', e => { e.stopPropagation(); UI.dlgClick && UI.dlgClick(); });
+
+/* ===================== 조사 지점 ===================== */
+function setHotspots(list) { G.hs = list; renderHs(); }
+function renderHs() {
+  const box = $('#hotspots'); box.innerHTML = '';
+  for (const h of G.hs) {
+    if (h.cond && !h.cond()) continue;
+    const b = document.createElement('button');
+    b.className = 'hs' + (h.secret ? ' secret' : '') + (h.done && h.done() ? ' done' : '');
+    Object.assign(b.style, { left: h.x * 100 + '%', top: h.y * 100 + '%', width: h.w * 100 + '%', height: h.h * 100 + '%' });
+    b.innerHTML = (h.secret ? '' : '<span class="dot"></span>') + `<span class="lbl">${h.label}</span>`;
+    b.setAttribute('aria-label', h.label); b.dataset.id = h.id;
+    b.addEventListener('click', e => { e.stopPropagation(); clickHs(h); });
+    box.appendChild(b);
+  }
+  lockHs();
+}
+function lockHs() { $('#hotspots').classList.toggle('locked', G.busy); }
+async function clickHs(h) {
+  if (G.busy || G.paused || !G.running) return;
+  G.busy = true; lockHs(); AU.init();
+  try { await h.fn(h); } catch (e) { swallow(e); return; }
+  G.busy = false; renderHs();
+}
+const fromQuad = (s, d1, d2, v1, v2) => bbox(quad(s, d1, d2, v1, v2));
+
+/* ===================== 화면 전환 ===================== */
+async function fadeOut(ms = 500) { const f = $('#fade'); f.classList.remove('cut'); f.style.transitionDuration = ms + 'ms'; f.classList.add('on'); await wait(ms); }
+async function fadeIn(ms = 600) { const f = $('#fade'); f.classList.remove('cut'); f.style.transitionDuration = ms + 'ms'; f.classList.remove('on'); await wait(ms); }
+function cutBlack(on) { const f = $('#fade'); f.classList.add('cut'); f.classList.toggle('on', on); }
+async function chapterCard(n, t, s) {
+  const c = $('#chapCard'); $('#ccN').textContent = `CHAPTER ${n}`; $('#ccT').textContent = t; $('#ccS').textContent = s;
+  c.classList.remove('on'); void c.offsetWidth; c.classList.add('on'); AU.boom();
+  await wait(3000); c.classList.remove('on');
+}
+function setScene(name, opt = {}) {
+  G.scene = name;
+  G.fd = opt.fd ?? .6; stage.style.setProperty('--fd', G.fd);
+  G.baseLight = opt.light ?? 1;
+  $('#redTint').style.opacity = name === 'lobbyRed' ? .35 : 0;
+}
+function shake(big) { const a = $('#app'); a.classList.remove('shake', 'shake2'); void a.offsetWidth; a.classList.add(big ? 'shake2' : 'shake'); setTimeout(() => a.classList.remove('shake', 'shake2'), 1200); }
+function flashRed() { const e = $('#redflash'); e.classList.remove('on'); void e.offsetWidth; e.classList.add('on'); }
+function flashWhite() { const e = $('#whiteflash'); e.classList.remove('on'); void e.offsetWidth; e.classList.add('on'); }
+
+/* ===================== 단서 ===================== */
+function addClue(id, title, text, kind = '일반') {
+  if (G.clues.find(c => c.id === id)) return;
+  G.clues.push({ id, title, text, kind }); AU.unlock();
+  toast(`<span class="tag ${kind === '판별' ? 't' : ''}">${kind}</span> 단서 획득: <b>${title}</b>`); hud();
+}
+const FRAGS = {
+  f1: ['그을린 이름표', '‘야간 당직 ____’. 이름 부분이 불에 타 읽을 수 없다. 그런데… 내 가슴에 달린 명찰과 똑같은 모양이다.'],
+  f2: ['녹화 테이프', '라벨: ‘2013.11.20 00:13 — 당직자 최후 영상’. 화면 속 실루엣의 걸음걸이가 이상하게 낯익다.'],
+  f3: ['탄 손전등', '반쯤 녹아내린 손전등. 지금 내가 들고 있는 것과 같은 모델이고, 같은 자리에 같은 흠집이 있다.'],
+  f4: ['사망자 명부의 13번째 줄', '‘13. 야간 당직자 — 신원 미상. 시신 미수습.’ 열두 명의 이름 아래, 마지막 줄만 비어 있다.'],
+  f5: ['그림자 없는 반사', '거울 속의 나에게는… 그림자가 없다. 비상등이 바로 뒤에서 비추고 있는데도.']
+};
+async function findFragment(id) {
+  if (G.fragments.has(id)) { await say('이미 확인한 곳이다. 생각하고 싶지 않다.'); return; }
+  G.fragments.add(id); AU.tone(220, 2, { g: .12, a: .3 }); AU.tone(233, 2, { g: .1, a: .3 }); AU.whisper(1.2);
+  toast(`<span class="tag s">숨겨진 조각</span> <b>${FRAGS[id][0]}</b> (${G.fragments.size}/5)`);
+  await say(`{q}[숨겨진 조각 ${G.fragments.size}/5 — ${FRAGS[id][0]}]{/q} ${FRAGS[id][1]}`);
+  hud();
+}
+
+/* ===================== 경우의 수 문제 (중2, 초급 → 고급) ===================== */
+const FIG = {
+  cards: `<svg viewBox="0 0 260 80" width="260"><g font-family="serif" font-size="34" font-weight="700" text-anchor="middle">${[0, 1, 2, 3].map(i => `<rect x="${8 + i * 64}" y="6" width="52" height="68" rx="4" fill="#1c1715" stroke="#8a2a2a"/><text x="${34 + i * 64}" y="52" fill="#e6dcc6">${i}</text>`).join('')}</g></svg>`,
+  circle: (() => { let p = ''; for (let i = 0; i < 7; i++) { const a = i / 7 * Math.PI * 2 - Math.PI / 2; p += `<circle cx="${100 + Math.cos(a) * 70}" cy="${90 + Math.sin(a) * 70}" r="7" fill="#ffb347"/><circle cx="${100 + Math.cos(a) * 70}" cy="${90 + Math.sin(a) * 70}" r="14" fill="#ff8a1a" opacity=".2"/>`; } return `<svg viewBox="0 0 200 180" width="200"><circle cx="100" cy="90" r="70" fill="none" stroke="#6a2a2a" stroke-dasharray="4 4"/>${p}</svg>`; })(),
+  regions: `<svg viewBox="0 0 300 150" width="300"><g stroke="#c9b9a0" stroke-width="2" font-family="serif" font-size="26" font-weight="700" fill="#e9dcc4" text-anchor="middle"><rect x="2" y="2" width="296" height="60" fill="#241a17"/><rect x="2" y="62" width="98" height="84" fill="#1a1414"/><rect x="100" y="62" width="100" height="84" fill="#201716"/><rect x="200" y="62" width="98" height="84" fill="#1a1414"/><text x="150" y="42" stroke="none">A</text><text x="51" y="113" stroke="none">B</text><text x="150" y="113" stroke="none">C</text><text x="249" y="113" stroke="none">D</text></g></svg>`,
+  grid: `<svg viewBox="0 0 260 190" width="260"><g stroke="#9a8a74" stroke-width="3">${[0, 1, 2, 3].map(i => `<line x1="${30 + i * 66}" y1="25" x2="${30 + i * 66}" y2="157"/>`).join('')}${[0, 1, 2].map(j => `<line x1="30" y1="${25 + j * 66}" x2="228" y2="${25 + j * 66}"/>`).join('')}</g><circle cx="30" cy="157" r="9" fill="#6f8f6a"/><text x="14" y="183" fill="#cfe8c8" font-size="16" font-family="serif">A 경비실</text><circle cx="228" cy="25" r="9" fill="#c33"/><text x="196" y="16" fill="#f99" font-size="16" font-family="serif">B 비상구</text></svg>`,
+  dice: (() => { let s = '<table><tr><th>+</th>' + [1, 2, 3, 4, 5, 6].map(x => `<th>${x}</th>`).join('') + '</tr>'; for (let a = 1; a <= 6; a++) { s += `<tr><th>${a}</th>`; for (let b = 1; b <= 6; b++) { const v = a + b; s += `<td class="${v === 4 || v === 8 ? 'hit' : ''}">${v}</td>`; } s += '</tr>'; } return s + '</table>'; })(),
+  lock: '<table><tr><th></th><th>1</th><th>3</th><th>5</th><th>7</th></tr>' + ['A', 'B', 'C'].map(r => `<tr><th>${r}</th>${[1, 3, 5, 7].map(n => `<td>${r}${n}</td>`).join('')}</tr>`).join('') + '</table>',
+  path: '<table><tr><td>1</td><td>3</td><td>6</td><td class="hit">10</td></tr><tr><td>1</td><td>2</td><td>3</td><td>4</td></tr><tr><td>1</td><td>1</td><td>1</td><td>1</td></tr></table>'
+};
+const PUZ = {
+  p1: { lv: 1, cat: '합의 법칙', title: '정문 열쇠꾸러미', a: 9, ch: [9, 24, 7, 8],
+    q: '정문 열쇠꾸러미에 <b>빨간 열쇠 3개</b>, <b>검은 열쇠 4개</b>, <b>은색 열쇠 2개</b>가 달려 있다. 이 중 열쇠 <b>한 개</b>를 골라 꽂아 보는 경우의 수는?',
+    hint: '한 번에 ‘하나만’ 고른다. 동시에 일어날 수 없는 경우들은 더한다.',
+    ex: '빨간·검은·은색 열쇠를 고르는 일은 동시에 일어나지 않는다 → <b>합의 법칙</b><br>3 + 4 + 2 = <b>9</b>' },
+  p2: { lv: 1, cat: '곱의 법칙', title: '당직 일지의 자물쇠', a: 12, ch: [12, 7, 16, 24],
+    q: '자물쇠의 첫째 칸에는 <b>A, B, C</b> 중 하나, 둘째 칸에는 <b>1, 3, 5, 7</b> 중 하나가 들어간다. 만들 수 있는 비밀번호는 모두 몇 가지인가?',
+    hint: '첫째 칸을 하나 정할 때마다, 둘째 칸의 모든 선택지가 따라 붙는다. 표로 그려 보자.',
+    ex: '첫째 칸 3가지 각각에 대해 둘째 칸 4가지 → <b>곱의 법칙</b> 3 × 4 = <b>12</b>' + FIG.lock },
+  p3: { lv: 2, cat: '합의 법칙 (배수)', title: '방문자 명부의 첫 페이지', a: 6, ch: [6, 4, 2, 7],
+    q: '명부에 끼워진 메모: “1부터 13까지 번호가 적힌 카드 13장 중 한 장을 뽑을 때, <b>3의 배수 또는 5의 배수</b>가 나오는 경우의 수가 첫 페이지다.” 몇 쪽을 펼쳐야 할까?',
+    hint: '3의 배수와 5의 배수를 각각 센 뒤, 두 조건을 동시에 만족하는 수(15의 배수)가 있는지 확인하라.',
+    ex: '3의 배수: 3, 6, 9, 12 → 4가지<br>5의 배수: 5, 10 → 2가지<br>겹치는 수(15)는 13 이하에 없다 → 4 + 2 = <b>6</b>' },
+  p4: { lv: 2, cat: '곱의 법칙 (여사건)', title: 'CCTV 전원 스위치', a: 7, ch: [7, 8, 6, 3],
+    q: '카메라 <b>3대</b>에 각각 ON/OFF 스위치가 있다. <b>적어도 한 대는 켜지도록</b> 스위치를 설정하는 방법의 수는?',
+    hint: '각 카메라마다 2가지. 전체 경우를 구한 다음, 모두 꺼진 경우를 빼라.',
+    ex: '전체: 2 × 2 × 2 = 8가지<br>모두 OFF인 1가지를 제외 → 8 − 1 = <b>7</b>' },
+  p5: { lv: 2, cat: '표 활용 · 합의 법칙', title: '인터폰의 숫자', a: 8, ch: [8, 5, 3, 6],
+    q: '인터폰 화면에 주사위 두 개가 떠오른다. <b>서로 다른 두 주사위</b>를 던질 때, 눈의 합이 <b>4 또는 8</b>이 되는 경우의 수는?',
+    hint: '6×6 표를 그려 합이 4인 칸과 8인 칸을 세어 보자. 두 경우는 동시에 일어나지 않는다.',
+    ex: '합 4: (1,3) (2,2) (3,1) → 3가지<br>합 8: (2,6) (3,5) (4,4) (5,3) (6,2) → 5가지<br>3 + 5 = <b>8</b>' + FIG.dice },
+  p6: { lv: 3, cat: '순열 (한 줄로 세우기)', title: '307호의 아이', a: 24, ch: [24, 16, 12, 10],
+    q: '문 안쪽에서 아이가 묻는다. “우리 <b>네 명</b>이 한 줄로 서는 방법은 몇 가지야? 맞히면 열어 줄게.” 서로 다른 4명을 한 줄로 세우는 경우의 수는?',
+    hint: '첫 번째 자리에 4명, 두 번째 자리엔 남은 3명, …',
+    ex: '4 × 3 × 2 × 1 = <b>24</b>' },
+  p7: { lv: 3, cat: '순열 (뽑아서 역할 정하기)', title: '간호 차트의 서명', a: 20, ch: [20, 10, 25, 9],
+    q: '그날 밤 당직표: 간호사 <b>5명</b> 중 <b>책임 간호사 1명</b>, <b>보조 간호사 1명</b>을 뽑는다. 뽑는 경우의 수는?',
+    hint: '역할이 다르면 (철수, 영희)와 (영희, 철수)는 다른 경우다.',
+    ex: '책임 5가지 × 보조(남은 4명) 4가지 = <b>20</b><br>역할이 다르므로 2로 나누지 않는다.' },
+  p15: { lv: 3, cat: '조건 (적어도)', title: '대피조 근무표', a: 11, ch: [11, 10, 21, 12],
+    q: '화재 대피조를 꾸린다. <b>남자 직원 5명, 여자 직원 2명</b> 중 2명을 뽑을 때, <b>여자가 적어도 1명</b> 포함되는 경우의 수는?',
+    hint: '‘적어도’ = 전체 경우 − (조건을 전혀 만족하지 않는 경우). 즉 모두 남자인 경우를 빼라.',
+    ex: '전체: 7 × 6 ÷ 2 = 21<br>모두 남자: 5 × 4 ÷ 2 = 10<br>21 − 10 = <b>11</b>' },
+  p8: { lv: 3, cat: '곱의 법칙 (수 만들기)', title: '엘리베이터 숫자판', a: 18, ch: [18, 24, 27, 12], fig: FIG.cards,
+    q: '0, 1, 2, 3이 적힌 카드 4장 중 <b>3장</b>을 뽑아 <b>세 자리 정수</b>를 만든다. 만들 수 있는 정수는 몇 개? (같은 카드는 한 번만 쓴다)',
+    hint: '백의 자리에는 0이 올 수 없다!',
+    ex: '백의 자리: 1, 2, 3 → 3가지<br>십의 자리: 0을 포함한 남은 수 → 3가지<br>일의 자리: 남은 2가지<br>3 × 3 × 2 = <b>18</b>' },
+  p9: { lv: 4, cat: '조합 (순서 없이 뽑기)', title: '기록 캐비닛', a: 15, ch: [15, 30, 12, 36],
+    q: '서로 다른 서랍 <b>6개</b> 중 <b>2개</b>를 동시에 열어야 잠금이 풀린다. 서랍 2개를 고르는 경우의 수는?',
+    hint: '순서를 생각해 센 다음, (A,B)와 (B,A)가 같으므로 2로 나눈다.',
+    ex: '순서 있게: 6 × 5 = 30<br>순서가 상관없으므로 ÷ 2 → <b>15</b>' },
+  p10: { lv: 4, cat: '조합 (도형)', title: '영안실의 촛불', a: 35, ch: [35, 210, 21, 42], fig: FIG.circle,
+    q: '바닥의 원 위에 촛불 <b>7개</b>가 놓여 있다. 이 중 <b>3개를 꼭짓점</b>으로 하는 삼각형은 몇 개? (어느 세 점도 한 직선 위에 있지 않다)',
+    hint: '삼각형은 세 점을 고르는 순서와 상관없다. 7×6×5를 세 점을 늘어놓는 수(3×2×1)로 나눈다.',
+    ex: '7 × 6 × 5 ÷ (3 × 2 × 1) = 210 ÷ 6 = <b>35</b>' },
+  p11: { lv: 4, cat: '그림 활용 (색칠하기)', title: '거울 테두리의 문양', a: 48, ch: [48, 24, 72, 36], fig: FIG.regions,
+    q: '거울 테두리에 A, B, C, D 네 구역이 있다. <b>4가지 색</b>을 사용하여 칠하되, 같은 색을 여러 번 써도 되고 <b>이웃한 구역은 서로 다른 색</b>을 칠한다. 칠하는 방법의 수는?',
+    hint: '가장 많은 구역과 맞닿은 A부터 칠하라. B와 D는 서로 이웃하지 않는다.',
+    ex: 'A: 4가지 → B: A와 다른 3가지 → C: A, B와 다른 2가지 → D: A, C와 다른 2가지 (B와는 같아도 됨)<br>4 × 3 × 2 × 2 = <b>48</b>' },
+  p12: { lv: 5, cat: '순열 (이웃하는 경우)', title: '화재 당일의 사진', a: 144, ch: [144, 720, 36, 72],
+    q: '보고서 첨부 사진에는 <b>6명</b>이 한 줄로 서 있다. 이 중 <b>가족 3명이 서로 이웃하여</b> 서는 경우의 수는?',
+    hint: '이웃하는 3명을 한 묶음으로 보고 줄을 세운 뒤, 묶음 안에서의 순서도 곱한다.',
+    ex: '묶음 1개 + 나머지 3명 = 4개를 한 줄로: 4 × 3 × 2 × 1 = 24<br>묶음 안 3명의 순서: 3 × 2 × 1 = 6<br>24 × 6 = <b>144</b>' },
+  p13: { lv: 5, cat: '그림 활용 (최단 경로)', title: '비상 대피도', a: 10, ch: [10, 6, 12, 5], fig: FIG.grid,
+    q: '대피도의 바둑판 모양 복도에서 <b>A(경비실)</b>에서 <b>B(비상구)</b>까지 <b>가장 짧은 길</b>로 가는 방법의 수는?',
+    hint: '오른쪽(→) 3번, 위쪽(↑) 2번을 늘어놓는 순서의 수. 또는 각 교차점까지 가는 방법의 수를 더해 가라.',
+    ex: '→→→↑↑ 다섯 칸 중 ↑ 2개의 자리를 고르는 수 = 5 × 4 ÷ 2 = <b>10</b><br>교차점마다 (왼쪽 + 아래쪽) 방법 수를 더해도 같다:' + FIG.path },
+  p14: { lv: 5, cat: '여러 조건의 경우의 수', title: '정문 잠금 코드', a: 21, ch: [21, 24, 18, 36],
+    q: '1, 2, 3, 4, 5 중 <b>서로 다른 세 숫자</b>로 세 자리 수를 만든다. <b>300 이상인 홀수</b>는 몇 개?',
+    hint: '백의 자리(3, 4, 5)로 경우를 나눈다. 일의 자리는 홀수여야 하며, 백의 자리 숫자와 겹치면 안 된다.',
+    ex: '백=3: 일의 자리 1, 5 (2) × 십의 자리 3 = 6<br>백=4: 일의 자리 1, 3, 5 (3) × 3 = 9<br>백=5: 일의 자리 1, 3 (2) × 3 = 6<br>6 + 9 + 6 = <b>21</b>' },
+  p16: { lv: 5, cat: '조합 (악수 문제)', title: '열세 번의 노크', a: 78, ch: [78, 156, 169, 66],
+    q: '명부 마지막 장: “<b>13명</b>이 서로 <b>한 번씩</b> 빠짐없이 손을 맞잡을 때, 그 횟수만큼 문을 두드려라.” 악수는 모두 몇 번인가?',
+    hint: '두 사람을 고르는 조합이다. A–B 악수와 B–A 악수는 같은 것.',
+    ex: '13명 중 2명을 고르는 수 = 13 × 12 ÷ 2 = <b>78</b>' }
+};
+const TOTAL_P = Object.keys(PUZ).length;
+
+/* ===================== 문제 화면 ===================== */
+function waitChoice() { return guard(res => { UI.onChoice = v => { UI.onChoice = null; res(v); }; }); }
+async function puzzle(id) {
+  const P = PUZ[id], m = $('#puzzle');
+  $('#pTitle').textContent = P.title; $('#pLv').textContent = '난이도 ' + '★'.repeat(P.lv) + '☆'.repeat(5 - P.lv);
+  $('#pCat').textContent = P.cat; $('#pNo').textContent = `해결 ${G.solved.size}/${TOTAL_P}`;
+  $('#pQ').innerHTML = P.q; $('#pFig').innerHTML = P.fig || ''; $('#pHint').innerHTML = ''; $('#pEx').innerHTML = ''; $('#pMsg').textContent = '';
+  $('#pGo').classList.add('hide'); $('#pHintB').classList.remove('hide');
+  let tries = 0, hinted = false;
+  $('#pHintB').onclick = () => { if (hinted) return; hinted = true; G.hints++; $('#pHint').innerHTML = `<div class="hint">💡 ${P.hint}</div>`; AU.tone(660, .3, { g: .05 }); };
+  m.classList.add('on');
+  while (true) {
+    const box = $('#pCh'); box.innerHTML = '';
+    shuffle(P.ch).forEach(v => { const b = document.createElement('button'); b.className = 'choice'; b.textContent = v; b.onclick = () => UI.onChoice && UI.onChoice({ v, b }); box.appendChild(b); });
+    const { v, b } = await waitChoice();
+    box.querySelectorAll('.choice').forEach(x => x.disabled = true);
+    if (v === P.a) {
+      b.classList.add('good'); G.correct++; G.solved.add(id); AU.unlock(); sanity(+5); hud();
+      $('#pMsg').innerHTML = '<span style="color:#9c9">정답. 철컥— 무언가가 풀렸다.</span>';
+      $('#pEx').innerHTML = `<div class="expl"><b>해설</b><br>${P.ex}</div>`; $('#pHintB').classList.add('hide');
+      $('#pGo').classList.remove('hide'); $('#pGo').onclick = () => UI.onChoice && UI.onChoice({ v: 'go' });
+      await waitChoice(); m.classList.remove('on'); return tries;
+    }
+    b.classList.add('bad'); G.wrong++; tries++; sanity(-8); G.corruption = clamp(G.corruption + .04, 0, 1); hud();
+    $('#pCard').classList.remove('shk'); void $('#pCard').offsetWidth; $('#pCard').classList.add('shk');
+    AU.wrongS(); await wait(450);
+    await wrongScare();
+    $('#pMsg').textContent = pick(['틀렸다. 무언가 한 걸음 더 가까워졌다.', '오답. 등 뒤의 공기가 차가워진다.', '틀렸다. 누군가 웃는 소리가 들렸다.', '아니다. 형광등이 하나 꺼졌다.']);
+    if (tries >= 2 && !hinted) { hinted = true; $('#pHint').innerHTML = `<div class="hint">💡 (떨리는 손으로 메모를 다시 읽는다) ${P.hint}</div>`; }
+  }
+}
+
+/* ===================== 점프스케어 ===================== */
+const scareEl = $('#scare'), scareCv = $('#scareCv'), scx = scareCv.getContext('2d');
+function overlay(dur, draw, cls = '') {
+  scareEl.className = 'on ' + cls; fit(scareCv); $('#scareText').textContent = '';
+  const t0 = performance.now();
+  return guard(res => {
+    function f(now) {
+      const p = (now - t0) / dur;
+      if (p >= 1) { scareEl.className = ''; $('#scareText').textContent = ''; res(); return; }
+      try { draw(scx, scareCv.width, scareCv.height, p, now / 1000); } catch (e) { }
+      requestAnimationFrame(f);
+    }
+    requestAnimationFrame(f);
+  });
+}
+const hit = (d = 3) => { G.scares++; sanity(-Math.round(d * .7)); };
+function fx(dur, draw) { G.fx.push({ t0: performance.now(), dur, draw }); }
+
+const SC = {
+  async face(variant = 'woman', dur = 700) {
+    hit(); AU.stinger(variant === 'burned' ? .5 : 1); if (Math.random() < .5) AU.scream(); shake(true); flashRed();
+    await overlay(dur, (c, w, h, p, t) => drawFace(c, w, h, variant, t), 'zoom');
+  },
+  async blackout() { // 갑작스러운 정전과 정적
+    hit(3); G.forcedDark = true; G.darkLevel = 0; AU.silence(2600); cap('(형광등이 모두 꺼졌다)');
+    await wait(2700); AU.footsteps(5, { approach: true, pan: .6 }); cap('(어둠 속에서 발소리가 다가온다)');
+    await wait(2600); AU.whisper(1.8, .9); cap('(귓가에서) “…왔네.”'); await wait(1600);
+    G.forcedDark = false; AU.stinger(); shake(true);
+    fx(260, (c, w, h) => drawFigure(c, w * .58, h * 1.25, h * 1.3, { eyes: true, alpha: .97 }));
+    await wait(700);
+  },
+  async shadowRun() {
+    hit(3); AU.whoosh(); AU.sting2(); cap('(무언가 빠르게 지나갔다)');
+    const dir = Math.random() < .5 ? 1 : -1;
+    fx(520, (c, w, h, p) => { for (let k = 0; k < 4; k++) { const q = clamp(p - k * .04, 0, 1), x = dir > 0 ? lerp(-.2, 1.2, q) : lerp(1.2, -.2, q); drawFigure(c, x * w, h * .98, h * .82, { alpha: .9 - k * .22, tilt: dir * .3 }); } });
+    await wait(700);
+  },
+  async peek() { // 화면 가장자리에서 엿보는 존재
+    hit(2); const side = Math.random() < .5;
+    fx(1500, (c, w, h, p) => { const a = p < .2 ? p / .2 : p > .75 ? (1 - p) / .25 : 1; const x = side ? w * (-.02 + .07 * a) : w * (1.02 - .07 * a); drawFigure(c, x, h * 1.1, h * 1.05, { eyes: true, tilt: side ? .5 : -.5, alpha: .95 }); });
+    await wait(500); AU.sting2(); cap('(시선이 느껴진다)'); await wait(1100);
+  },
+  async hands(n = 6) {
+    hit(3); const pts = [...Array(n)].map(() => ({ x: rnd(.1, .9), y: rnd(.2, .85), s: rnd(.14, .26), r: rnd(-.6, .6) }));
+    pts.forEach((_, i) => setTimeout(() => { AU.slam(); }, i * 160));
+    shake(true); cap('(쾅! 쾅! 쾅!)');
+    await overlay(n * 160 + 1300, (c, w, h, p) => {
+      c.clearRect(0, 0, w, h); const shown = Math.min(n, Math.floor(p * (n * 160 + 1300) / 160) + 1);
+      c.globalAlpha = p > .8 ? (1 - p) / .2 : 1; for (let i = 0; i < shown; i++) { const q = pts[i]; drawHand(c, q.x * w, q.y * h, q.s * h, q.r, .9); } c.globalAlpha = 1;
+    }, 'trans');
+  },
+  async textGlitch(msg) {
+    hit(3); AU.ring(); await wait(900); AU.staticBurst(1.1, .3); AU.whisper(1.2);
+    await overlay(1300, (c, w, h, p) => {
+      c.fillStyle = Math.random() < .2 ? '#300' : '#000'; c.fillRect(0, 0, w, h);
+      c.globalAlpha = .25; c.drawImage(noiseCv, 0, 0, w, h); c.globalAlpha = 1;
+      $('#scareText').textContent = Math.random() < .15 ? '' : msg;
+      $('#scareText').style.transform = `translate(${rnd(-12, 12)}px,${rnd(-6, 6)}px)`;
+    });
+    $('#scareText').style.transform = '';
+  },
+  async whisperName() {
+    hit(3); const msg = pick(['너 도 방 문 자 야', '뒤 에 있 어', '이 름 을 적 어']); AU.whisper(2.4); AU.heartbeat(3, .6);
+    await overlay(2600, (c, w, h, p) => { c.fillStyle = '#000'; c.fillRect(0, 0, w, h); $('#scareText').textContent = msg.slice(0, Math.ceil(p * 1.3 * msg.length)); if (p > .9 && Math.random() < .5) drawFace(c, w, h, 'hollow', p); });
+  },
+  async tear() {
+    hit(3); AU.staticBurst(.9, .4); AU.sting2(); const a = $('#app');
+    for (let i = 0; i < 6; i++) { a.classList.add(i % 2 ? 'tear2' : 'tear'); await wait(rnd(60, 130)); a.classList.remove('tear', 'tear2'); await wait(rnd(40, 90)); }
+  },
+  async eyes(final = false) {
+    hit(5); AU.whisper(3); AU.heartbeat(5, .55); const n = final ? 34 : 18; const E = [...Array(n)].map(() => ({ x: rnd(.05, .95), y: rnd(.08, .92), s: rnd(.6, 1.6) }));
+    await overlay(final ? 3600 : 2200, (c, w, h, p, t) => {
+      c.fillStyle = '#000'; c.fillRect(0, 0, w, h); const k = Math.floor(p * 1.15 * n);
+      if (p > .92) { drawFace(c, w, h, 'many', t); return; }
+      for (let i = 0; i < Math.min(n, k); i++) { const e = E[i], s = h * .012 * e.s, blink = Math.sin(t * 3 + i) > .97; if (blink) continue; c.fillStyle = p > .8 ? '#f22' : '#e9e2cf'; c.shadowColor = p > .8 ? '#f00' : '#fff'; c.shadowBlur = 8; c.beginPath(); c.ellipse(e.x * w - s * 2, e.y * h, s, s * .55, 0, 0, 7); c.ellipse(e.x * w + s * 2, e.y * h, s, s * .55, 0, 0, 7); c.fill(); c.shadowBlur = 0; }
+    });
+    AU.stinger(); shake(true);
+  },
+  async corridorEnd() { // 복도 끝에 나타나 점점 가까워지는 존재
+    hit(5); G.flags.endLit = true;
+    const f = { scene: 'corridor', x: .5, yb: .57, h: .2, eyes: true };
+    G.figs.push(f); cap('(복도 끝에… 누군가 서 있다)'); AU.heartbeat(4, .7);
+    await wait(2200);
+    for (const [yb, hh] of [[.72, .42], [.9, .75]]) {
+      G.forcedDark = true; G.darkLevel = .02; AU.noise(.06, { ft: 'highpass', f: 3000, g: .1 }); await wait(420);
+      f.yb = yb; f.h = hh; G.forcedDark = false; AU.footsteps(1, { g: .4 }); await wait(900);
+    }
+    G.forcedDark = true; await wait(500); G.figs = G.figs.filter(x => x !== f); G.flags.endLit = false; G.forcedDark = false;
+    await this.face('hollow', 600); G.scares--;
+  },
+  async crawler() { // 엘리베이터 천장에 거꾸로 매달린 것
+    hit(5); G.flags.elevOpen = true; AU.ding(); await wait(1100);
+    const bb = fromQuad(...CORR.elev);
+    AU.stinger(); AU.scream(); shake(true);
+    fx(1700, (c, w, h, p) => { const drop = Math.min(1, p * 3); c.save(); c.translate((bb.x + bb.w / 2) * w, bb.y * h + drop * bb.h * .55 * h); c.rotate(Math.PI); drawFigure(c, 0, 0, bb.h * h * .9, { eyes: true, eyeColor: '#f22' }); c.restore(); });
+    await wait(1800); G.flags.elevOpen = false; AU.slam();
+  },
+  async mirror() {
+    hit(5);
+    await overlay(2300, (c, w, h, p, t) => {
+      c.fillStyle = '#000'; c.fillRect(0, 0, w, h);
+      const mw = Math.min(w * .5, h * .55), mh = mw * 1.5, x = (w - mw) / 2, y = (h - mh) / 2;
+      c.fillStyle = '#3a2e22'; c.fillRect(x - 14, y - 14, mw + 28, mh + 28);
+      const g = c.createLinearGradient(x, y, x + mw, y + mh); g.addColorStop(0, '#1e262b'); g.addColorStop(1, '#0b0f12'); c.fillStyle = g; c.fillRect(x, y, mw, mh);
+      c.save(); c.beginPath(); c.rect(x, y, mw, mh); c.clip();
+      if (p < .55) drawFigure(c, x + mw / 2, y + mh * 1.15, mh * 1.05, { alpha: .8, color: '#07090a' });
+      else { c.translate(x, y); drawFace(c, mw, mh, 'grin', t); }
+      c.restore();
+      if (p > .55 && p < .58) { AU.stinger(1.5); shake(true); flashRed(); }
+    });
+    G.flags.mirrorCrack = true; AU.noise(.4, { ft: 'highpass', f: 2000, g: .6 });
+  },
+  async crash() { // 가짜 오류 화면
+    hit(5); AU.silence(1800);
+    const lines = ['FATAL ERROR 0x00000013', 'visitor_13.exe 프로세스가 종료되지 않습니다', '기록되지 않은 방문자를 감지했습니다 ...', '당직자 데이터를 찾을 수 없습니다', '복구 시도 중 ......', '복구 실패', '그것이 이미 안에 있습니다'];
+    await overlay(3600, (c, w, h, p, t) => {
+      c.fillStyle = '#000'; c.fillRect(0, 0, w, h);
+      if (p > .9) { drawFace(c, w, h, 'hollow', t); return; }
+      c.font = `${Math.round(h * .03)}px 'Nanum Gothic Coding', monospace`; c.fillStyle = '#c8c8c8';
+      const k = Math.floor(p / .9 * lines.length + 1);
+      for (let i = 0; i < Math.min(k, lines.length); i++) { c.fillStyle = i >= 5 ? '#f33' : '#bbb'; c.fillText(lines[i], w * .08 + (i === k - 1 ? rnd(-2, 2) : 0), h * (.2 + i * .07)); }
+      if (Math.floor(t * 3) % 2) c.fillRect(w * .08, h * (.2 + Math.min(k, lines.length) * .07) - h * .025, w * .015, h * .03);
+    });
+    AU.stinger(); AU.scream(); shake(true);
+  },
+  async silenceBang() {
+    hit(5); AU.silence(3800); G.forcedDark = true; G.darkLevel = .25; cap('……'); await wait(1300);
+    G.darkLevel = .1; await wait(1300); G.darkLevel = 0; await wait(1300);
+    AU.bang(); flashWhite(); shake(true); G.forcedDark = false;
+    fx(420, (c, w, h) => { c.fillStyle = 'rgba(0,0,0,.6)'; c.fillRect(0, 0, w, h); drawFigure(c, w * .45, h * 1.6, h * 1.9, { eyes: true, eyeColor: '#f22' }); });
+    await wait(900);
+  },
+  async visitorAppear(scene, x, yb, hh) { // 아무도 없던 공간에 나타나는 방문자
+    hit(3); G.forcedDark = true; G.darkLevel = .03; await wait(350);
+    const f = { scene, x, yb, h: hh, eyes: true, alpha: .96 }; G.figs.push(f); G.forcedDark = false;
+    AU.tone(46, 1.6, { g: .5, a: .02 }); AU.heartbeat(3, .7); return f;
+  }
+};
+let lastWrong = -1;
+const WRONG_POOL = [
+  () => SC.face('woman'), () => SC.face('grin'), () => SC.shadowRun(), () => SC.hands(5),
+  () => SC.textGlitch(pick(['뒤를 봐', '틀렸어', '한 걸음 더', '문을 열어줘', '너도 기록될 거야'])),
+  () => SC.tear(), () => SC.whisperName(), () => SC.face('upside'), () => SC.peek()
+];
+async function wrongScare() {
+  if (!G.wrongQ.length) G.wrongQ = shuffle([...WRONG_POOL.keys()]);
+  let k = G.wrongQ.shift(); if (k === lastWrong && G.wrongQ.length) { G.wrongQ.push(k); k = G.wrongQ.shift(); }
+  lastWrong = k;
+  const pz = $('#puzzle'); pz.style.visibility = 'hidden';
+  try { await WRONG_POOL[k](); } finally { pz.style.visibility = ''; }
+}
+
+/* ===================== 방문자 도착 ===================== */
+function arrive(n) {
+  if (G.arrived >= n) return;
+  G.arrived = n; const v = G.visitors[n - 1];
+  AU.chime(); cap(`(딩동— 방문자 #${n} 도착)`);
+  toast(`방문자 <b>#${n}</b> ${v ? v.name : '???'} — 명부에 기록됨`);
+}
+function arriveTo(n) { for (let i = G.arrived + 1; i <= n; i++) setTimeout(() => arrive(i), (i - G.arrived - 1) * 1400); }
+const solved = id => G.solved.has(id);
+async function already(t) { await say(t || '이미 조사한 곳이다.'); }
+
+/* ===================== 1장: 병원 입장 ===================== */
+async function chapter1() {
+  G.chapter = 1; G.clock = '23:58'; setScene('lobby', { fd: .55 }); hud();
+  cutBlack(true);
+  setObjective('…');
+  await narr(['2026년 11월 20일. 오후 11시 58분.', '폐쇄된 지 13년 된 청운병원. 나는 오늘 밤, 이곳의 야간 당직자다.', '구인 공고의 조건은 이상할 만큼 간단했다. {q}“방문자를 명부에 기록할 것. 그리고 새벽 다섯 시까지 절대 나가지 말 것.”{/q}', '폐쇄된 병원에… 대체 누가 찾아온다는 걸까.']);
+  await chapterCard(1, '병원 입장', '23:58 — 청운병원 1층 로비');
+  await fadeIn(900);
+  AU.door(-.8); cap('(멀리서 문이 닫히는 소리)');
+  await narr(['로비는 생각보다 깨끗했다. 마치 누군가 매일 밤 닦아 두는 것처럼.', '형광등이 웅웅거린다. 13년 동안 전기가 끊기지 않았다는 게 말이 되나.']);
+  await SC.blackout();
+  await narr(['……방금, 누군가 내 귀에 대고 말했다.', '{r}아무도 없다.{/r} 정신 차리자. 먼저 정문을 잠그고, 데스크의 당직 일지를 확인해야 한다.', '(손전등으로 주변을 비춰 보자. 마우스를 움직이면 빛이 따라온다.)']);
+  setObjective('정문을 잠그고, 데스크 위의 당직 일지를 확인하라');
+  setHotspots([
+    { id: 'door', x: .4, y: .26, w: .2, h: .46, label: '정문 (유리문)', req: 1, done: () => solved('p1'), fn: async () => {
+      if (solved('p1')) return already('정문은 잠겨 있다. 유리 너머로 빗소리만 들린다.');
+      await say('유리문 너머로 빗줄기가 쏟아진다. 문은 열쇠로만 잠글 수 있다. 열쇠꾸러미가 묵직하다.');
+      await puzzle('p1');
+      AU.unlock(); await say('철컥. 문이 잠겼다. 이제 아무도 들어올 수 없다—');
+      await wait(700); G.flags.glassPrint = true;
+      await SC.face('woman', 650);
+      await narr(['{r}쾅!{/r} 유리문에 무언가가 부딪혔다.', '……아무도 없다. 유리에 {r}붉은 손자국{/r}만 남아 있다. 바깥쪽이 아니라— 안쪽에.']);
+      addClue('key', '정문 열쇠', '정문은 안쪽에서 잠겼다. 그런데 손자국은 유리 안쪽에 찍혀 있었다.');
+      await ch1Check();
+    } },
+    { id: 'book', x: .73, y: .5, w: .13, h: .1, label: '당직 일지', req: 1, done: () => solved('p2'), fn: async () => {
+      if (solved('p2')) return already('일지의 마지막 장은 찢겨 나가 있다.');
+      await say('데스크 위에 낡은 당직 일지가 놓여 있다. 작은 자물쇠가 채워져 있다.');
+      await puzzle('p2');
+      await narr(['자물쇠가 열렸다. 첫 장에 삐뚤빼뚤한 글씨가 적혀 있다.', '{q}“매년 11월 20일 0시 13분, 13명의 방문자가 온다.”{/q}', '{q}“그중 셋은 사람이 아니다. 명부와 CCTV, 그리고 병원 자체가 단서가 되어 줄 것이다.”{/q}', '{q}“그리고— 13번째 방문자에게는 절대로 문을 열어 주지 마라.”{/q}', '그 뒤의 장은 모두 찢겨 나가 있다.']);
+      addClue('journal', '당직 일지', '13명의 방문자 중 {셋}은 사람이 아니다. 13번째 방문자에게는 절대 문을 열지 말 것.'.replace(/[{}]/g, ''), '판별');
+      await ch1Check();
+    } },
+    { id: 'clock', x: .7, y: .07, w: .1, h: .15, label: '벽시계', fn: async () => {
+      if (!G.flags.clockRev) { G.flags.clockRev = true; AU.creak(); await narr(['벽시계를 올려다봤다.', '……초침이 {r}거꾸로{/r} 돌고 있다.']); }
+      else await say('시계는 계속 거꾸로 간다. 마치 무언가를 향해 되감기는 것처럼.');
+    } },
+    { id: 'f1', x: .14, y: .76, w: .07, h: .08, label: '…반짝임?', secret: 1, cond: () => !G.fragments.has('f1'), fn: async () => { await say('벤치 아래에서 무언가 반짝였다. 손을 뻗어 꺼냈다.'); await findFragment('f1'); } }
+  ]);
+}
+async function ch1Check() {
+  if (!(solved('p1') && solved('p2'))) return;
+  await say('준비는 끝났다. 시계를 봤다. 11시 59분… 12시… 12시 10분…');
+  G.clock = '00:13'; hud();
+  cutBlack(true); AU.silence(900); await wait(1000); AU.chime(); await wait(1400);
+  await say('{r}딩—동.{/r} 0시 13분. 초인종이 울렸다.');
+  await chapter2();
+}
+
+/* ===================== 2장: 첫 번째 방문자 ===================== */
+async function chapter2() {
+  G.chapter = 2; G.corruption = Math.max(G.corruption, .12); setScene('office', { fd: .45 }); setHotspots([]); hud();
+  await chapterCard(2, '첫 번째 방문자', '00:13 — 1층 경비실');
+  await fadeIn(700);
+  arrive(1);
+  await narr(['경비실로 자리를 옮겼다. CCTV 모니터 여섯 대가 병원 곳곳을 비춘다.', `인터폰 너머로 첫 번째 방문자가 이름을 말했다. {q}“${G.visitors[0].name}입니다. ${G.visitors[0].room}호 ${G.visitors[0].patient} 씨 면회 왔어요.”{/q}`, '문을 열어 주자, 그는 인사도 없이 계단으로 올라갔다. 폐쇄된 병원의, 비어 있어야 할 병실로.']);
+  arrive(2);
+  await narr(['또 초인종. 두 번째 방문자.', '이들을 모두 기록해야 한다. 그리고 그중 {r}셋{/r}을 가려내야 한다.']);
+  setObjective('방문자 명부를 펼치고, CCTV와 인터폰을 조사하라');
+  setHotspots([
+    { id: 'log', x: .13, y: .66, w: .24, h: .16, label: '방문자 명부', req: 1, done: () => solved('p3'), fn: async () => {
+      if (solved('p3')) { openLog(); return; }
+      await say('방문자 명부. 표지가 축축하다. 끈으로 묶여 있고, 메모 한 장이 끼워져 있다.');
+      await puzzle('p3');
+      G.logUnlocked = true; hud();
+      await narr(['6쪽을 펼쳤다. 지금까지 온 방문자들의 이름이 이미 적혀 있다. {r}내 글씨체로.{/r}', '(이제 상단의 [명부] 버튼으로 언제든 방문자 기록을 볼 수 있다.)']);
+      addClue('log', '방문자 명부', '이름·관계·방문 병실·면회 환자·도착 시각·서명·비고가 기록된다. 가짜는 이 기록 어딘가에서 티가 난다.');
+      arrive(3); await ch2Check();
+    } },
+    { id: 'cctv', x: .26, y: .1, w: .48, h: .42, label: 'CCTV 모니터', req: 1, done: () => solved('p4'), fn: async () => {
+      if (solved('p4')) return already('모니터 속 복도는 비어 있다. …지금은.');
+      await cctvSequence(); arrive(4); await ch2Check();
+    } },
+    { id: 'inter', x: .79, y: .35, w: .12, h: .22, label: '인터폰', req: 1, done: () => solved('p5'), fn: async () => {
+      if (solved('p5')) return already('인터폰은 조용하다. 붉은 불도 꺼졌다.');
+      await say('인터폰의 붉은 불이 깜빡인다. 수화기를 들려는 순간—');
+      await SC.textGlitch('문을 열어줘');
+      await narr(['……수화기 너머에서 숨소리만 들린다. 가까이. 아주 가까이.', '화면에 통화 기록 잠금이 떠 있다. 주사위 두 개 그림과 함께.']);
+      await puzzle('p5');
+      await narr(['기록이 출력됐다. 통화 기록이 아니라 {q}정문 개폐 기록{/q}이다.', '{q}“정문 자동 잠금 해제: 매일 00:13. 그 이전 출입 기록 없음.”{/q}']);
+      addClue('time', '정문 개폐 기록', '정문은 00:13에 처음 열린다. 그보다 이른 도착 시각이 적힌 방문자는 문을 통해 들어온 것이 아니다.', '판별');
+      arrive(5); await ch2Check();
+    } },
+    { id: 'f2', x: .57, y: .77, w: .12, h: .1, label: '…서랍 틈', secret: 1, cond: () => !G.fragments.has('f2'), fn: async () => { await say('책상 서랍이 살짝 열려 있다. 안에 비디오테이프 하나.'); await findFragment('f2'); } }
+  ]);
+}
+async function cctvSequence() {
+  const cv = $('#cctvCv'), c = cv.getContext('2d'), box = $('#cctv');
+  const st = { on: [true, false, true, false], fig: null, face: false };
+  box.classList.add('on'); let alive = true;
+  const draw = now => {
+    if (!alive) return; fit(cv); const w = cv.width, h = cv.height, t = now / 1000, fw = w / 2, fh = h / 2;
+    c.fillStyle = '#000'; c.fillRect(0, 0, w, h);
+    if (st.face) { drawFace(c, w, h, 'hollow', t); c.globalAlpha = .35; c.drawImage(noiseCv, 0, 0, w, h); c.globalAlpha = 1; requestAnimationFrame(draw); return; }
+    const feeds = [[drawCorridor, '3F 복도'], [drawLobby, '1F 로비'], [drawCorridor, '5F 복도'], [drawBasement, 'B1 영안실']];
+    feeds.forEach(([fn, name], i) => {
+      const x = (i % 2) * fw, y = Math.floor(i / 2) * fh;
+      c.save(); c.beginPath(); c.rect(x + 2, y + 2, fw - 4, fh - 4); c.clip(); c.translate(x, y);
+      if (st.on[i]) { try { fn(c, fw, fh, t, { cctv: true, red: false, figs: i === 2 && st.fig ? [st.fig] : [] }); } catch (e) { } c.globalAlpha = .22; c.drawImage(noiseCv, 0, 0, fw, fh); c.globalAlpha = 1; }
+      else { c.drawImage(noiseCv, 0, 0, fw, fh); c.fillStyle = 'rgba(0,0,0,.5)'; c.fillRect(0, 0, fw, fh); c.fillStyle = '#f44'; c.font = `${fh * .08}px monospace`; c.fillText('NO SIGNAL', fw * .36, fh * .52); }
+      c.fillStyle = '#cfc'; c.font = `${Math.round(fh * .055)}px 'Nanum Gothic Coding',monospace`; c.fillText(`CAM 0${i + 1}  ${name}   ${G.clock}:${pad(Math.floor(t) % 60)}`, fw * .04, fh * .09);
+      c.restore();
+    });
+    requestAnimationFrame(draw);
+  };
+  requestAnimationFrame(draw);
+  try {
+    AU.staticBurst(.5, .15);
+    await say('카메라 두 대가 꺼져 있다. 전원 스위치 조합이 이상하게 꼬여 있다.');
+    await puzzle('p4');
+    st.on = [true, true, true, true]; AU.beep();
+    await say('모든 카메라가 켜졌다. CAM 03, 5층 복도. 방문자 하나가 걸어간다.');
+    st.fig = { x: .5, yb: .58, h: .2 }; AU.heartbeat(3, .7);
+    await say('……이상하다. 복도 조명 바로 아래를 지나가는데, {r}바닥에 그림자가 없다.{/r}');
+    st.fig.eyes = true; await wait(900); st.fig.yb = .8; st.fig.h = .5; AU.staticBurst(.2, .2); await wait(700); st.fig.yb = 1.1; st.fig.h = 1; AU.staticBurst(.2, .3); await wait(500);
+    hit(5); st.face = true; AU.stinger(); AU.staticBurst(1, .5); shake(true); await wait(900); st.face = false; st.on = [false, false, false, false]; await wait(500);
+  } finally { alive = false; box.classList.remove('on'); }
+  await narr(['……모니터가 모두 꺼졌다. 방금 그것은 {r}렌즈를 들여다보고 있었다.{/r}', 'CCTV 판독 메모를 남겼다.']);
+  addClue('shadow', 'CCTV 판독', '사람이라면 반드시 그림자가 찍힌다. 명부 비고란에 ‘그림자 없음’이 적힌 방문자는 사람이 아니다.', '판별');
+}
+async function ch2Check() {
+  if (!(solved('p3') && solved('p4') && solved('p5'))) return;
+  await wait(600);
+  await SC.visitorAppear('office', .11, .6, .4);
+  cap('(창문 너머에 누군가 서 있다)');
+  await narr(['창문 너머 복도에… {r}누군가 서 있다.{/r}', '얼굴은 보이지 않는다. 명부에 적힌 다섯 명 중 누구와도 체형이 맞지 않는다.']);
+  G.forcedDark = true; G.darkLevel = 0; AU.silence(1200); await wait(1300); G.figs = G.figs.filter(f => f.scene !== 'office'); G.forcedDark = false;
+  AU.scream(); cap('(위층에서 비명)');
+  await say('사라졌다. 그리고— 위층에서 {r}비명{/r}이 들렸다. 3층이다. 올라가야 한다.');
+  await fadeOut(600); await chapter3();
+}
+
+/* ===================== 3장: 이상 현상 ===================== */
+async function chapter3() {
+  G.chapter = 3; G.clock = '00:47'; G.corruption = Math.max(G.corruption, .3); setScene('corridor', { fd: .62 }); setHotspots([]); hud();
+  await chapterCard(3, '이상 현상', '00:47 — 3층 병동 복도');
+  await fadeIn(700);
+  await narr(['3층 복도. 형광등이 숨 쉬듯 깜빡인다.', '방문자들이 들어간 병실은 모두 문이 닫혀 있다. 안에서는 아무 소리도 나지 않는다.']);
+  await wait(1200); await SC.shadowRun();
+  await say('……방금 뭔가 복도를 가로질렀다. 사람의 속도가 아니었다.');
+  setObjective('3층을 조사하라: 307호, 간호사 스테이션, 게시판, 엘리베이터');
+  const d307 = fromQuad('L', .06, .24, .22, 1), board = fromQuad(...CORR.board), stn = fromQuad(...CORR.station), elev = fromQuad(...CORR.elev);
+  setHotspots([
+    { id: 'd307', ...d307, label: '307호 병실', req: 1, done: () => solved('p6'), fn: async () => {
+      if (solved('p6')) return already('307호 문 안쪽에서 아직도 누군가 두드리고 있다. 열지 않는 게 좋겠다.');
+      await narr(['307호. 문 안쪽에서 아이가 숫자를 세는 소리가 들린다.', '{q}“하나, 둘, 셋, 넷… 우리 넷이야.”{/q}']);
+      await puzzle('p6');
+      G.flags.door307open = true; AU.creak();
+      await narr(['문이 스르륵 열렸다. 텅 빈 병실. 침대 위에 크레파스 그림 한 장.', '불타는 건물. 그 앞에 서 있는 열세 명의 사람. 마지막 한 명만 {r}검게 칠해져 있다.{/r}']);
+      G.flags.door307open = false; G.flags.prints307 = true;
+      await SC.hands(7);
+      await say('문이— 저절로 닫혔다. 안쪽에서 무언가가 미친 듯이 문을 두드린다.');
+      addClue('drawing', '307호의 그림', '불타는 병원 앞의 13명. 13번째 사람만 검게 칠해져 있다. 그림 뒷면: ‘당직 아저씨는 끝까지 문을 두드렸어’');
+      arriveTo(7); await ch3Check();
+    } },
+    { id: 'stn', ...stn, label: '간호사 스테이션', req: 1, done: () => solved('p7'), fn: async () => {
+      if (solved('p7')) return already('차트는 2013년 11월 20일에서 멈춰 있다.');
+      await say('간호사 스테이션. 13년 전 날짜의 차트가 그대로 펼쳐져 있다. 서명란이 비어 있다.');
+      await puzzle('p7');
+      await narr(['차트 사이에 원장 명의의 지시서가 끼워져 있다.', '{q}“11월 20일부로 3층 비상구를 쇠사슬로 봉쇄할 것. 외부 유출 방지. — 원장”{/q}']);
+      addClue('chain', '비상구 봉쇄 지시서', '화재 당일, 원장의 지시로 3층 비상구가 바깥에서 쇠사슬로 잠겨 있었다.');
+      arrive(8); await ch3Check();
+    } },
+    { id: 'board', ...board, label: '게시판 (근무표)', req: 1, done: () => solved('p15'), fn: async () => {
+      if (solved('p15')) return already('근무표의 마지막 칸은 여전히 지워져 있다.');
+      await say('누렇게 바랜 게시판. ‘화재 대피조 편성’ 문서가 압정에 꽂혀 있다.');
+      await puzzle('p15');
+      await narr(['대피조 명단 아래, 그날 밤의 근무표가 있다.', '{q}“2013.11.20 야간 당직 — ______”{/q} 이름이 칼로 긁어 지워져 있다.']);
+      addClue('roster', '그날 밤의 근무표', '화재 당일 야간 당직자의 이름이 누군가에 의해 지워져 있다.');
+      arrive(9); await ch3Check();
+    } },
+    { id: 'elev', ...elev, label: '엘리베이터', req: 1, done: () => solved('p8'), fn: async () => {
+      if (solved('p8')) return already('엘리베이터 문 틈으로 차가운 바람이 새어 나온다.');
+      await say('엘리베이터. 호출 버튼 위에 숫자 카드 네 장이 꽂힌 잠금판이 있다.');
+      await puzzle('p8');
+      await say('층 안내판이 불을 밝혔다. {q}1F · 2F · 3F · 5F · 6F{/q}. 띵— 엘리베이터가 도착했다.');
+      await SC.crawler();
+      await narr(['……엘리베이터 천장에 {r}무언가가 거꾸로 매달려{/r} 나를 내려다보고 있었다.', '문이 닫혔다. 안내판을 다시 봤다. 4층 버튼은 없다. 처음부터.']);
+      addClue('floor', '층 안내판', '청운병원에는 4층이 없다 (1·2·3·5·6층). 4층 병실(4xx호)을 방문했다는 기록은 거짓이다.', '판별');
+      arrive(10); await ch3Check();
+    } },
+    { id: 'end', x: .42, y: .33, w: .16, h: .24, label: '복도 끝', fn: async () => {
+      if (!G.flags.endDone) { G.flags.endDone = true; await SC.corridorEnd(); await say('……숨을 쉴 수가 없었다. 복도 끝에는 아무것도 없다. 비상구 표시등만 녹색으로 빛난다.'); }
+      else await say('복도 끝 비상구는 쇠사슬로 감겨 있다. 사슬이 녹아 붙은 흔적이 있다.');
+    } },
+    { id: 'f3', x: .56, y: .85, w: .08, h: .09, label: '…바닥의 무언가', secret: 1, cond: () => !G.fragments.has('f3'), fn: async () => { await say('바닥에 그을린 손전등이 굴러다닌다.'); await findFragment('f3'); } }
+  ]);
+}
+async function ch3Check() {
+  const n = ['p6', 'p7', 'p15', 'p8'].filter(solved).length;
+  if (n === 2 && !G.flags.endDone) { G.flags.endDone = true; await wait(800); await say('뒤통수가 따갑다. 복도 끝을 돌아봤다.'); await SC.corridorEnd(); await say('……사라졌다. 심장이 귀에서 뛰는 것 같다.'); }
+  if (n < 4) return;
+  await wait(500); G.flags.elevFloor = 'B1'; AU.ding();
+  await narr(['띵. 아무도 누르지 않은 엘리베이터가 열린다.', '안내판에 불이 하나만 켜져 있다. {r}B1{/r}. 영안실과 기록 보관실이 있는 층.', '……가야 한다. 진실은 아래에 있다.']);
+  await fadeOut(900); await chapter4();
+}
+
+/* ===================== 4장: 13번째 방문자 ===================== */
+async function chapter4() {
+  G.chapter = 4; G.clock = '02:13'; G.corruption = Math.max(G.corruption, .5); setScene('basement', { fd: .68 }); setHotspots([]); hud();
+  await chapterCard(4, '13번째 방문자', '02:13 — 지하 1층 기록 보관실 · 영안실');
+  await fadeIn(800);
+  await narr(['지하 1층. 기계음이 멎었다. 이 층에는 심전도 소리조차 없다.', '천장의 전구 하나가 흔들린다. {r}바람도 없는데.{/r}']);
+  setObjective('지하를 조사하라: 기록 캐비닛, 영안실 냉동고, 거울, 화재 보고서');
+  setHotspots([
+    { id: 'cab', x: .03, y: .25, w: .25, h: .55, label: '기록 캐비닛', req: 1, done: () => solved('p9'), fn: async () => {
+      if (solved('p9')) return already('캐비닛 안에는 더 이상 볼 것이 없다.');
+      await say('철제 캐비닛. 서랍 여섯 개 중 두 개를 동시에 당겨야 열리는 구조다.');
+      await puzzle('p9');
+      await narr(['서랍 안에서 보험 서류가 나왔다.', '{q}“화재보험 계약 — 계약자: 청운병원장. 계약일: 2013년 11월 13일.”{/q} 화재 일주일 전이다.']);
+      addClue('insure', '화재보험 계약서', '화재 7일 전, 원장 명의로 거액의 화재보험이 가입되어 있었다.');
+      arrive(11); await ch4Check();
+    } },
+    { id: 'morgue', x: .36, y: .2, w: .28, h: .42, label: '영안실 냉동고', req: 1, done: () => solved('p10'), fn: async () => {
+      if (solved('p10')) return already('가운데 칸은 열린 채다. 아무도 닫지 않았다.');
+      await say('영안실 냉동고. 바닥의 원 위에 누군가 촛불을 켜 두었다. 냉동고 손잡이에 숫자 다이얼이 달려 있다.');
+      await puzzle('p10');
+      await say('다이얼이 풀렸다. 가운데 칸 문에 사망자 명부가 붙어 있다. 그것을 떼어 내는 순간—');
+      G.flags.drawerOpen = true; AU.noise(.8, { f: 400, g: .4 });
+      await SC.face('burned', 800);
+      await narr(['{r}칸이 저절로 열렸다.{/r} 안에는… 그을린 시트만 남아 있다.', `명부에는 화재 사망 환자 세 명의 이름이 적혀 있다. {q}${G.deceased.join(', ')}{/q}`]);
+      addClue('dead', '영안실 사망자 명부', `2013.11.20 화재로 사망한 환자: ${G.deceased.join(', ')}. 이 환자들을 ‘면회’하러 온 방문자는 사람이 아니다.`, '판별');
+      await ch4Check();
+    } },
+    { id: 'mirror', x: .72, y: .17, w: .17, h: .4, label: '금 간 거울', req: 1, done: () => solved('p11'), fn: async () => {
+      if (solved('p11')) return already('깨진 거울에는 이제 아무것도 비치지 않는다. 나조차도.');
+      await say('벽에 걸린 거울. 테두리에 네 칸짜리 문양이 새겨져 있다. 거울 속 내가 나보다 반 박자 늦게 움직인다.');
+      await puzzle('p11');
+      await say('문양이 맞춰지자 거울이 덜컹 흔들렸다. 다시 거울을 들여다봤다.');
+      await SC.mirror();
+      await narr(['거울 속의 나는 {r}웃고 있었다.{/r} 나는 웃지 않았는데.', '깨진 거울 뒤에 쪽지가 붙어 있다. {q}“거울 너머에서 온 것들은 자기 이름을 거꾸로 쓴다.”{/q}']);
+      addClue('mirror', '거울 뒤의 쪽지', '거울 너머에서 온 것들은 이름을 거꾸로 쓴다. 명부의 서명이 좌우로 뒤집힌 방문자를 의심하라.', '판별');
+      await ch4Check();
+    } },
+    { id: 'report', x: .6, y: .64, w: .3, h: .12, label: '화재 보고서 (기밀)', req: 1, done: () => solved('p12'), fn: async () => {
+      if (solved('p12')) return already('보고서의 사진은 볼 때마다 사람이 한 명씩 늘어나는 것 같다.');
+      await say('붉은 ‘기밀’ 도장이 찍힌 화재 보고서. 첨부 사진 한 장이 클립에 끼워져 있다.');
+      await puzzle('p12');
+      await narr(['공식 결론: {q}“원인 — 누전. 인명 피해 — 13명. 관리상 과실 없음.”{/q}', '그러나 사진 구석에, 녹아 붙은 {r}비상구 쇠사슬{/r}이 찍혀 있다. 그리고 그 앞에 쓰러진 당직복 차림의 사람.']);
+      addClue('report', '조작된 화재 보고서', '공식 원인은 ‘누전’. 하지만 사진에는 잠긴 비상구와 그 앞에 쓰러진 야간 당직자가 찍혀 있다.');
+      await SC.crash();
+      await say('……화면이, 아니 내 눈앞이 잠깐 꺼졌었다. 정신을 차려라.');
+      arrive(12); await ch4Check();
+    } },
+    { id: 'f4', x: .26, y: .57, w: .06, h: .08, label: '…삐져나온 종이', secret: 1, cond: () => !G.fragments.has('f4'), fn: async () => { await say('캐비닛 틈에 종이 한 장이 끼어 있다. 영안실 명부의 마지막 장이다.'); await findFragment('f4'); } }
+  ]);
+}
+async function ch4Check() {
+  if (!['p9', 'p10', 'p11', 'p12'].every(solved)) return;
+  await wait(600);
+  await SC.silenceBang();
+  G.clock = '04:44'; hud();
+  await narr(['{r}쿵.{/r}', '위층, 정문 쪽에서 노크 소리가 울린다. 셀 수 있었다. 정확히 {r}열세 번.{/r}', '13번째 방문자가 왔다.']);
+  AU.knock(13, 0, .3);
+  await fadeOut(900); await chapter5();
+}
+
+/* ===================== 5장: 최종 선택 ===================== */
+async function chapter5() {
+  G.chapter = 5; G.corruption = Math.max(G.corruption, .7); setScene('lobbyRed', { fd: .6 }); setHotspots([]); G.flags.door13 = true; hud();
+  await chapterCard(5, '최종 선택', '04:44 — 1층 로비');
+  await fadeIn(800);
+  arrive(13);
+  await narr(['로비는 비상등의 붉은빛에 잠겨 있다.', '유리문 너머, 빗속에 누군가 서 있다. 얼굴은 보이지 않는다.', '그것이 유리를 두드린다.']);
+  G.flags.manyPrints = true; await SC.hands(12);
+  await narr(['{r}쾅쾅쾅쾅쾅쾅—{/r} 유리 전체에 손자국이 번진다. 바깥이 아니라, 안쪽에서.', '새벽 다섯 시까지 16분. 탈출 경로를 확보하고, 정문 잠금장치를 확인하자. 그리고… 명부를 완성해야 한다.']);
+  setObjective('비상 대피도와 정문 잠금장치를 조사하라');
+  setHotspots([
+    { id: 'map', x: .08, y: .22, w: .16, h: .22, label: '비상 대피도', req: 1, done: () => solved('p13'), fn: async () => {
+      if (solved('p13')) return already('대피도의 비상구 표시는 붉은 펜으로 X 표시되어 있다.');
+      await say('벽의 비상 대피도. 경비실(A)에서 비상구(B)까지 바둑판 모양 복도가 그려져 있다.');
+      await puzzle('p13');
+      await say('경로를 손가락으로 따라가자 대피도 위에 누군가의 글씨가 떠올랐다. {q}“열 가지 길 모두 막혀 있었어. 사슬로.”{/q}');
+      addClue('route', '대피도의 메모', '그날 밤 3층에서 비상구로 가는 길은 모두 막혀 있었다.');
+      await ch5Check();
+    } },
+    { id: 'lock', x: .615, y: .41, w: .06, h: .14, label: '정문 잠금장치', req: 1, done: () => solved('p14'), fn: async () => {
+      if (solved('p14')) return already('잠금장치의 불빛이 초록색으로 바뀌어 있다.');
+      await say('정문 옆 전자 잠금장치. 세 자리 코드를 요구한다. 화면에 조건이 떠 있다.');
+      await puzzle('p14');
+      AU.unlock(); await say('삐빅. 잠금이 해제되었다. 이제 문을 열지 말지는— 내가 정한다.');
+      addClue('code', '정문 잠금 해제', '정문은 이제 안쪽에서 열 수 있다.');
+      await ch5Check();
+    } },
+    { id: 'door5', x: .4, y: .26, w: .2, h: .46, label: '정문 — 13번째 방문자', cond: () => solved('p13') && solved('p14'), fn: async () => {
+      if (!solved('p16')) {
+        await narr(['문 앞에 섰다. 유리 너머의 그것이 노크를 멈췄다.', '명부의 마지막 장이 저절로 넘어간다.']);
+        await puzzle('p16');
+        await say('78. 나는 그 숫자를 중얼거렸다. 그러자 로비의 모든 불이 꺼졌다.');
+        await SC.eyes(true);
+        await narr(['어둠 속에서 수십 개의 눈이 나를 보았다. 그리고 하나씩 감겼다.', '불이 다시 들어왔다. 명부가 내 손에 들려 있다. {r}이제 판정할 시간이다.{/r}']);
+      }
+      await verdict();
+    } },
+    { id: 'f5', x: .29, y: .22, w: .06, h: .26, label: '…작은 거울', secret: 1, cond: () => !G.fragments.has('f5'), fn: async () => { await say('기둥에 붙은 작은 거울. 나를 비춰 봤다.'); await findFragment('f5'); } }
+  ]);
+}
+async function ch5Check() {
+  if (solved('p13') && solved('p14')) { setObjective('정문 앞에서 13번째 방문자와 마주하라'); renderHs(); AU.knock(3, 0, .5); cap('(똑. 똑. 똑.)'); }
+}
+
+/* ===================== 명부 · 단서 패널 ===================== */
+function visitorRows(mode) {
+  const vs = G.visitors.slice(0, Math.min(12, mode === 'verdict' ? 12 : G.arrived));
+  let s = `<table class="vt"><tr><th>#</th><th>이름</th><th>관계</th><th>방문 병실</th><th>면회 환자</th><th>도착</th><th>서명</th><th>비고</th>${mode === 'verdict' ? '<th>판정</th>' : ''}</tr>`;
+  vs.forEach(v => {
+    s += `<tr><td>${v.n}</td><td>${v.name}</td><td>${v.rel}</td><td>${v.room}호</td><td>${v.patient}</td><td>${v.time}</td><td><span class="sig ${v.mirror ? 'm' : ''}">${v.name}</span></td><td>${v.note}</td>`;
+    if (mode === 'verdict') s += `<td><button class="tog ${G.mark[v.n] ? 'fake' : ''}" data-n="${v.n}">${G.mark[v.n] ? '가짜' : '사람'}</button></td>`;
+    s += '</tr>';
+  });
+  if (G.arrived >= 13) s += `<tr class="unk"><td>13</td><td>______</td><td>?</td><td>—</td><td>—</td><td>04:44</td><td>—</td><td>노크 13회. 얼굴이 보이지 않음. 당직복 차림.</td>${mode === 'verdict' ? '<td>—</td>' : ''}</tr>`;
+  return s + '</table>';
+}
+function openPanel(title, html) { $('#panelT').textContent = title; $('#panelB').innerHTML = html; $('#panel').classList.add('on'); }
+function openLog() {
+  if (!G.logUnlocked) return;
+  openPanel('방문자 명부', `<div class="meta">도착한 방문자 ${Math.min(G.arrived, 13)}명 · 가짜는 셋. 판별 단서와 비교하라.</div><div class="vt-wrap">${visitorRows('log')}</div>`);
+}
+function openClues() {
+  let s = '';
+  if (!G.clues.length) s += '<div class="clue" style="color:#777">아직 찾은 단서가 없다.</div>';
+  G.clues.forEach(c => s += `<div class="clue"><span class="tag ${c.kind === '판별' ? 't' : ''}">${c.kind}</span><b>${c.title}</b><br>${c.text}</div>`);
+  s += `<h2 style="font-size:16px;margin-top:16px">숨겨진 조각 ${G.fragments.size}/5</h2>`;
+  Object.keys(FRAGS).forEach(k => s += G.fragments.has(k) ? `<div class="clue"><span class="tag s">조각</span><b>${FRAGS[k][0]}</b><br>${FRAGS[k][1]}</div>` : `<div class="clue" style="color:#555">??? — 어딘가에서 희미하게 반짝이는 것을 찾아라</div>`);
+  openPanel('수집한 단서', s);
+}
+$('#panelX').onclick = () => $('#panel').classList.remove('on');
+$('#panel').addEventListener('click', e => { if (e.target.id === 'panel') $('#panel').classList.remove('on'); });
+
+/* ===================== 최종 판정 ===================== */
+function verdict() {
+  G.mark = G.mark || {};
+  return guard(res => {
+    const render = () => {
+      const n = Object.values(G.mark).filter(Boolean).length, secret = G.fragments.size === 5;
+      $('#verdictB').innerHTML = `<div class="meta">가짜라고 생각하는 방문자를 눌러 <b style="color:#f66">‘가짜’</b>로 표시하라 (현재 ${n}명). 일지에 따르면 가짜는 셋이다.</div>
+        <div class="vt-wrap">${visitorRows('verdict')}</div>
+        <h2 style="font-size:17px;margin-top:14px">13번째 방문자를 어떻게 할 것인가?</h2>
+        <div class="prow" style="margin-top:8px">
+          <button class="btn" data-c="refuse">문을 열지 않는다</button>
+          <button class="btn ghost" data-c="open">문을 열어 준다</button>
+          ${secret ? '<button class="btn" data-c="name" style="border-color:#d8b46a;color:#ffe2a0">명부 13번 칸에 내 이름을 적는다</button>' : '<span style="color:#555;font-size:12px">(숨겨진 조각이 모두 모이면 다른 선택지가 보일지도 모른다…)</span>'}
+        </div><div class="msg" id="vMsg"></div>`;
+      $('#verdictB').querySelectorAll('.tog').forEach(b => b.onclick = () => { const k = +b.dataset.n; G.mark[k] = !G.mark[k]; AU.tone(300, .08, { g: .05 }); render(); });
+      $('#verdictB').querySelectorAll('[data-c]').forEach(b => b.onclick = () => {
+        if (n === 0) { $('#vMsg').textContent = '아무도 지목하지 않았다. 정말 모두 사람이라고 확신하는가? (최소 한 명은 지목해야 한다)'; return; }
+        $('#verdict').classList.remove('on'); res(b.dataset.c);
+      });
+    };
+    render(); $('#verdict').classList.add('on');
+  }).then(choice => {
+    const fakes = G.visitors.filter(v => v.fake).map(v => v.n).sort().join(',');
+    const marked = Object.keys(G.mark).filter(k => G.mark[k]).map(Number).sort().join(',');
+    const ok = fakes === marked;
+    const end = !ok ? 'bad' : choice === 'refuse' ? 'true' : choice === 'open' ? 'open' : 'secret';
+    return playEnding(end);
+  });
+}
+
+/* ===================== 엔딩 ===================== */
+const ENDINGS = {
+  true: { name: 'TRUE END', sub: '새벽의 증언', col: '#ffd9a8', hint: '가짜 방문자 셋을 모두 가려내고, 13번째에게 문을 열지 않는다.',
+    lines: ['나는 문을 열지 않았다.', '노크는 새벽 다섯 시가 되자 거짓말처럼 멎었다.', '내가 가려낸 세 개의 이름이 명부에서 하나씩 번져 사라졌다. 처음부터 없었던 것처럼.', '가방에는 세 가지가 들어 있었다. 비상구 봉쇄 지시서, 원장 명의의 화재보험 계약서, 그리고 쇠사슬이 찍힌 사진.', '13년 전 그 밤, 화재는 사고가 아니었다. 비상구는 밖에서 잠겨 있었다.', '아침 햇살 속에서 나는 병원을 걸어 나왔다. 그리고 그 서류들을 경찰서 책상 위에 내려놓았다.', '……그날 밤, 휴대폰에 알림이 하나 와 있었다. {r}‘방문자 1명 — 00:13’{/r}'] },
+  bad: { name: 'BAD END', sub: '열네 번째 방문자', col: '#ff4040', hint: '가짜 방문자를 잘못 가려낸다.',
+    lines: ['명부를 덮는 순간, 로비의 불이 모두 꺼졌다.', '내가 ‘사람’이라고 적은 것들이 천천히 고개를 돌려 나를 보았다.', '그들은 웃고 있었다. 입이 귀까지 찢어진 채로.', '……', '다음 날 밤, 새 당직자가 명부를 펼쳤다.', '방문자는 {r}14명{/r}이었다. 열네 번째 줄에는 내 이름이 적혀 있었다.'] },
+  open: { name: 'OTHER END', sub: '유리문 너머', col: '#9ab8ff', hint: '가짜를 모두 가려냈지만, 13번째 방문자에게 문을 열어 준다.',
+    lines: ['나는 문을 열었다.', '빗속에 서 있던 것은… 나였다. 젖은 당직복, 같은 명찰, 같은 손전등.', '{r}“교대할 시간이야.”{/r} 그것이 말했다.', '눈을 떴을 때, 나는 유리문 바깥에 서 있었다. 비가 내리고 있었다.', '로비 안에서 낯선 당직자가 겁에 질린 얼굴로 나를 보고 있었다.', '나는 문을 두드리기 시작했다. 열세 번.'] },
+  secret: { name: 'SECRET END', sub: '명부의 마지막 이름', col: '#fff2c8', hint: '숨겨진 조각 5개를 모두 찾고, 가짜를 가려낸 뒤 진실을 받아들인다.',
+    lines: ['나는 명부의 열세 번째 칸에 펜을 댔다.', '그을린 이름표. 녹화 테이프. 탄 손전등. 사망자 명부의 빈 줄. 그림자 없는 반사.', '모든 조각이 하나의 이름을 가리키고 있었다.', '13년 전 11월 20일 0시 13분. 잠긴 비상구 앞에서 마지막까지 문을 두드리던 야간 당직자.', '{r}그건 나였다.{/r}', '13번째 방문자는 매년 나를 데리러 왔다. 그리고 나는 매년, 문을 열지 않았다.', '내 이름을 적자 노크가 멎었다. 열두 명의 방문자가 로비로 내려와 내게 고개를 숙였다.', '유리문이 열렸다. 밖에는 비가 그쳐 있었다. 우리는 함께 걸어 나갔다.', '다음 날, 철거 현장에서 13년 만에 한 사람의 유해가 수습되었다. 그 손에는 낡은 방문자 명부가 쥐어져 있었다.'] }
+};
+function drawEndBg(c, w, h, key, t, p) {
+  if (key === 'true') { const g = c.createLinearGradient(0, 0, 0, h); g.addColorStop(0, '#1b2440'); g.addColorStop(.6, `rgb(${120 + p * 80},${70 + p * 50},${50})`); g.addColorStop(1, '#0a0806'); c.fillStyle = g; c.fillRect(0, 0, w, h); c.fillStyle = '#050505'; c.fillRect(w * .3, h * .35, w * .4, h * .65); for (let i = 0; i < 12; i++) { c.fillStyle = Math.random() < .02 ? '#ffcc80' : '#120f0c'; c.fillRect(w * (.33 + (i % 4) * .09), h * (.4 + Math.floor(i / 4) * .15), w * .05, h * .08); } }
+  else if (key === 'secret') { const g = c.createRadialGradient(w / 2, h * .45, 0, w / 2, h * .45, w * .7); g.addColorStop(0, `rgba(255,240,210,${.25 + p * .5})`); g.addColorStop(1, '#0b0a09'); c.fillStyle = g; c.fillRect(0, 0, w, h); for (let i = 0; i < 13; i++) drawFigure(c, w * (.14 + i * .056), h * .98, h * .35, { alpha: .25 + p * .2, color: '#1a1714' }); }
+  else if (key === 'open') { c.fillStyle = '#05080c'; c.fillRect(0, 0, w, h); c.strokeStyle = 'rgba(150,170,195,.25)'; for (let i = 0; i < 120; i++) { const rx = (i * .1379) % 1, ry = (t * 1.7 + i * .371) % 1; c.beginPath(); c.moveTo(rx * w, ry * h); c.lineTo(rx * w - 4, ry * h + h * .05); c.stroke(); } c.fillStyle = 'rgba(200,220,210,.08)'; c.fillRect(w * .3, h * .15, w * .4, h * .85); drawFigure(c, w * .5, h * .9, h * .45, { alpha: .8, color: '#0a0d0c' }); }
+  else { c.fillStyle = '#000'; c.fillRect(0, 0, w, h); c.fillStyle = `rgba(120,0,0,${.15 + Math.sin(t * 2) * .05})`; c.fillRect(0, 0, w, h); for (let i = 0; i < 14; i++) drawFigure(c, w * (.06 + i * .067), h * 1.02, h * (.4 + (i % 3) * .05), { eyes: true, eyeColor: '#f22', alpha: .9 }); }
+  c.fillStyle = 'rgba(0,0,0,.55)'; c.fillRect(0, 0, w, h);
+}
+async function playEnding(key) {
+  G.ending = key; G.running = false; G.busy = true;
+  const E = ENDINGS[key];
+  const got = Store.get('v13_endings', []); if (!got.includes(key)) { got.push(key); Store.set('v13_endings', got); }
+  if (key === 'bad') { await SC.face('grin', 900); }
+  if (key === 'open') { AU.door(0); await wait(1200); await SC.face('hollow', 700); }
+  if (key === 'secret') { AU.silence(2500); await wait(2500); AU.tone(220, 6, { g: .1, a: 2 }); AU.tone(277, 6, { g: .08, a: 2 }); AU.tone(330, 6, { g: .07, a: 2 }); }
+  if (key === 'true') { AU.tone(196, 5, { g: .08, a: 2 }); AU.tone(247, 5, { g: .06, a: 2 }); }
+  const box = $('#ending'), cv = $('#endCv'), c = cv.getContext('2d'), tx = $('#endText');
+  box.classList.add('on'); tx.innerHTML = ''; let alive = true, prog = 0;
+  const draw = now => { if (!alive) return; fit(cv); drawEndBg(c, cv.width, cv.height, key, now / 1000, prog); requestAnimationFrame(draw); };
+  requestAnimationFrame(draw);
+  const clickWait = ms => guard(res => { let done = false; const fin = () => { if (done) return; done = true; box.removeEventListener('click', fin); clearTimeout(tm); res(); }; const tm = setTimeout(fin, ms); box.addEventListener('click', fin); });
+  try {
+    for (let i = 0; i < E.lines.length; i++) {
+      prog = i / E.lines.length; tx.innerHTML = `<div class="ln">${fmtTxt(E.lines[i])}</div>`;
+      await wait(60); tx.firstChild.classList.add('on');
+      await clickWait(3400 + E.lines[i].length * 45);
+      tx.firstChild.classList.remove('on'); await wait(700);
+    }
+    prog = 1; AU.boom();
+    tx.innerHTML = `<div class="ln" id="endTitle" style="color:${E.col}">${E.name}</div><div class="ln" style="color:#bbb;letter-spacing:.3em">${E.sub}</div>`;
+    await wait(80); tx.querySelectorAll('.ln').forEach(l => l.classList.add('on'));
+    await clickWait(4500);
+  } finally { alive = false; box.classList.remove('on'); }
+  showSummary(key);
+}
+
+/* ===================== 결과 요약 ===================== */
+function showSummary(key) {
+  const E = ENDINGS[key], got = Store.get('v13_endings', []);
+  const fakes = G.visitors.filter(v => v.fake);
+  const acc = G.correct + G.wrong ? Math.round(G.correct / (G.correct + G.wrong) * 100) : 0;
+  $('#sumB').innerHTML = `
+    <div class="meta"><span class="lv">${E.name}</span><span>${E.sub}</span></div>
+    <div class="sumgrid">
+      <div><small>플레이 시간</small><b>${fmtTime(G.playTime)}</b></div>
+      <div><small>정답 / 오답</small><b>${G.correct} / ${G.wrong}</b></div>
+      <div><small>정답률</small><b>${acc}%</b></div>
+      <div><small>힌트 사용</small><b>${G.hints}</b></div>
+      <div><small>수집한 단서</small><b>${G.clues.length}</b></div>
+      <div><small>숨겨진 조각</small><b>${G.fragments.size}/5</b></div>
+      <div><small>점프스케어</small><b>${G.scares}회</b></div>
+      <div><small>남은 정신력</small><b>${Math.round(G.sanity)}</b></div>
+    </div>
+    <h2 style="font-size:16px">가짜 방문자의 정체</h2>
+    ${fakes.map(v => `<div class="clue"><span class="tag t">${TELLS[v.tell].name}</span><b>#${v.n} ${v.name}</b> (${v.room}호 · ${v.time}) — ${TELLS[v.tell].desc} ${G.mark && G.mark[v.n] ? '<span style="color:#9c9">✔ 지목함</span>' : '<span style="color:#f66">✘ 놓침</span>'}</div>`).join('')}
+    ${G.mark ? G.visitors.filter(v => !v.fake && G.mark[v.n]).map(v => `<div class="clue" style="color:#d88">#${v.n} ${v.name} — 사람이었다. (잘못 지목)</div>`).join('') : ''}
+    <h2 style="font-size:16px;margin-top:14px">엔딩 수집 ${got.length}/4</h2>
+    ${endSlots()}
+    <div class="prow" style="margin-top:16px;justify-content:center"><button class="btn" id="sAgain">다시 플레이</button><button class="btn ghost" id="sTitle">타이틀로</button></div>`;
+  $('#summary').classList.add('on');
+  $('#sAgain').onclick = () => { $('#summary').classList.remove('on'); restart(false); };
+  $('#sTitle').onclick = () => { $('#summary').classList.remove('on'); restart(true); };
+}
+function endSlots() {
+  const got = Store.get('v13_endings', []);
+  return '<div class="endslots">' + Object.entries(ENDINGS).map(([k, E]) => got.includes(k) ? `<div class="got"><b>${E.name}</b>${E.sub}<br><small style="color:#888">${E.hint}</small></div>` : `<div><b>???</b><small style="color:#666">${k === 'secret' ? '병원 곳곳에 숨겨진 무언가가 있다…' : E.hint}</small></div>`).join('') + '</div>';
+}
+
+/* ===================== 시작 · 일시정지 · 재시작 ===================== */
+function startGame() {
+  AU.init();
+  abortAll(); G = newState(); genVisitors(); G.running = true;
+  $('#title').classList.add('hide'); $('#hud').classList.remove('hide');
+  ['#puzzle', '#panel', '#verdict', '#pause', '#confirm', '#summary', '#endsM'].forEach(s => $(s).classList.remove('on'));
+  scareEl.className = ''; $('#cctv').classList.remove('on'); $('#ending').classList.remove('on'); $('#dialog').classList.remove('on');
+  layout(); hud();
+  chapter1().catch(swallow);
+}
+function restart(toTitle) {
+  abortAll(); G = newState(); G.running = false;
+  ['#puzzle', '#panel', '#verdict', '#pause', '#confirm', '#summary', '#endsM'].forEach(s => $(s).classList.remove('on'));
+  scareEl.className = ''; $('#cctv').classList.remove('on'); $('#ending').classList.remove('on'); $('#dialog').classList.remove('on'); $('#chapCard').classList.remove('on');
+  $('#puzzle').style.visibility = ''; cutBlack(false); $('#hotspots').innerHTML = '';
+  if (toTitle) { $('#title').classList.remove('hide'); $('#hud').classList.add('hide'); }
+  else startGame();
+}
+function setPause(p) {
+  if (!G.running) return;
+  G.paused = p; $('#pause').classList.toggle('on', p);
+  if (AU.ok()) { if (p) AU.ctx.suspend && AU.ctx.suspend(); else AU.ctx.resume && AU.ctx.resume(); }
+}
+function toggleMute() {
+  AU.setMute(!AU.muted);
+  const t = AU.muted ? '소리 꺼짐' : '소리 켜짐';
+  $('#bMute').textContent = t; $('#tMute').textContent = '소리: ' + (AU.muted ? '꺼짐' : '켜짐'); $('#pzMute').textContent = AU.muted ? '소리 켜기' : '소리 끄기';
+}
+$('#tStart').onclick = startGame;
+$('#tMute').onclick = toggleMute;
+$('#tEnds').onclick = () => { $('#endsB').innerHTML = `<div class="meta">달성 ${Store.get('v13_endings', []).length}/4</div>` + endSlots(); $('#endsM').classList.add('on'); };
+$('#endsX').onclick = () => $('#endsM').classList.remove('on');
+$('#bMute').onclick = toggleMute; $('#pzMute').onclick = toggleMute;
+$('#bPause').onclick = () => setPause(true);
+$('#pzResume').onclick = () => setPause(false);
+$('#pzRestart').onclick = () => { $('#confirm').classList.add('on'); };
+$('#pzTitle').onclick = () => restart(true);
+$('#bRestart').onclick = () => { if (G.running) { G.paused = true; } $('#confirm').classList.add('on'); };
+$('#cfYes').onclick = () => restart(false);
+$('#cfNo').onclick = () => { $('#confirm').classList.remove('on'); if (!$('#pause').classList.contains('on')) G.paused = false; };
+$('#bClue').onclick = openClues;
+$('#bLog').onclick = openLog;
+$('#bHint').onclick = () => {
+  if (!G.running) return;
+  G.hints++; hud();
+  const left = [...document.querySelectorAll('.hs:not(.secret):not(.done)')];
+  left.forEach(b => { b.classList.remove('hl'); void b.offsetWidth; b.classList.add('hl'); setTimeout(() => b.classList.remove('hl'), 2600); });
+  toast(left.length ? `💡 아직 조사하지 않은 곳이 <b>${left.length}곳</b> 있다. (붉게 빛나는 곳)<br>${G.objective || ''}` : `💡 ${G.objective || '대사를 끝까지 읽어 보자.'}`);
+};
+window.addEventListener('keydown', e => {
+  if (e.key === 'Escape') { if ($('#panel').classList.contains('on')) $('#panel').classList.remove('on'); else if (G.running) setPause(!G.paused); }
+  if ((e.key === ' ' || e.key === 'Enter') && UI.dlgClick && !G.paused) { e.preventDefault(); UI.dlgClick(); }
+});
+document.addEventListener('visibilitychange', () => { if (document.hidden && G.running && !G.paused) setPause(true); });
+$('#main').addEventListener('click', () => { if (UI.dlgClick && !G.paused) UI.dlgClick(); });
+
+/* 부팅 */
+G = newState();
+layout();
+requestAnimationFrame(loop);
+
+</script>
+</body>
+</html>
