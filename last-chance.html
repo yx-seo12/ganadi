@@ -704,7 +704,7 @@ function crawler(g,x,y,s,t){g.save();g.translate(x,y);g.scale(s,-s);g.fillStyle=
 function noiseOverlay(g,a){for(let i=0;i<60;i++){g.fillStyle=`rgba(${Math.random()*255|0},${Math.random()*255|0},${Math.random()*255|0},${a*Math.random()})`;g.fillRect(0,Math.random()*H,W,1+Math.random()*4);}}
 
 /* =========================================================
-   수학 문제 (중학교 2학년 · 경우의 수와 확률) — 33문항
+   수학 문제 (중학교 2학년 · 경우의 수와 확률) — 37문항 (마지막 문제 4개 포함)
    ========================================================= */
 const Q=[
 {id:1,lv:1,q:'주사위 한 개를 던질 때, <b>짝수의 눈</b>이 나오는 경우의 수는?',o:['2가지','3가지','4가지','6가지'],a:1,
@@ -801,6 +801,23 @@ const Q=[
  e:'두 사람 모두 맞히지 못할 확률: (1 − 0.8) × (1 − 0.6) = 0.2 × 0.4 = 0.08<br>(적어도 한 사람 명중) = 1 − 0.08 = <b>0.92</b>.'},
 {id:33,lv:5,q:'O, X로 답하는 5문제를 모두 아무렇게나 찍을 때, <b>4문제 이상</b> 맞힐 확률은?',o:['1/32','5/32','3/16','1/4'],a:2,h:'',
  e:'모든 경우: 2⁵ = 32가지<br>5문제 모두 맞힘: 1가지 / 정확히 4문제 맞힘: 틀릴 1문제를 고르는 5가지<br>(1 + 5)/32 = 6/32 = <b>3/16</b>.<br>— 찍어서 통과할 확률은 겨우 3/16. 그래서 이 시험은, 찍지 않고 <b>풀어야</b> 했다.'},
+/* ----- 마지막 문제 (출구) : 함정 4연속. 그것의 속삭임(w)은 거짓말이다 ----- */
+{id:34,lv:5,q:'모양·크기·색이 완전히 똑같아서 <b>구별할 수 없는</b> 주사위 두 개를 동시에 던질 때, 두 눈의 수의 합이 4가 될 확률은?',o:['2/21','1/12','1/9','1/18'],a:1,
+ w:'그것: “똑같은 주사위잖아. (1, 3)이랑 (3, 1)은 구별이 안 되니까 같은 경우야. 나올 수 있는 경우는 모두 21가지, 그중 합이 4인 건 (1, 3), (2, 2) 두 가지. 그렇지?”',
+ h:'눈으로 구별되지 않아도, 실제로 굴러가는 주사위는 두 개다. 한쪽에 몰래 점을 찍어 두었다고 상상해 보자. 그래도 확률이 바뀔까? 그리고 그 21가지는 모두 ‘똑같이’ 일어날까?',
+ e:'구별할 수 없어 보여도 주사위는 2개다. 하나에 표시를 했다고 생각하면 모든 경우는 6 × 6 = 36가지이고, 이 36가지는 일어날 가능성이 모두 같다.<br>합이 4: (1, 3), (2, 2), (3, 1) → 3가지. 따라서 3/36 = <b>1/12</b>.<br>(1, 3)과 (3, 1)을 하나로 묶은 21가지는 각 경우가 일어날 가능성이 서로 달라서(예: (1, 3)은 (2, 2)보다 2배 잘 나온다) 확률의 분모로 쓸 수 없다. — <b>그것의 말은 거짓이었다.</b>'},
+{id:35,lv:5,q:'0, 0, 1, 2가 하나씩 적힌 카드 4장 중 3장을 뽑아 한 줄로 놓아 세 자리 정수를 만들 때, 만들 수 있는 <b>서로 다른</b> 세 자리 정수의 개수는?',o:['6개','9개','12개','18개'],a:0,
+ w:'그것: “백의 자리엔 0을 빼고 3가지, 십의 자리 3가지, 일의 자리 2가지. 3 × 3 × 2 = 18. 아니면 0이 두 장이니까 반으로 나눠서 9? 어느 쪽이든 곱하면 끝이야.”',
+ h:'0이 적힌 카드는 2장이지만, 두 카드로 만든 숫자는 똑같다. 곱의 법칙을 믿지 말고, 백의 자리를 정한 뒤 만들어지는 수를 직접 써 보자. 같은 수가 두 번 세어지지 않았나?',
+ e:'백의 자리에는 0이 올 수 없으므로 1 또는 2이다.<br>① 백의 자리 1: 남은 카드 0, 0, 2로 → 100, 102, 120 (3개)<br>② 백의 자리 2: 남은 카드 0, 0, 1로 → 200, 201, 210 (3개)<br>따라서 <b>6개</b>.<br>같은 숫자가 적힌 카드가 있을 때 곱의 법칙을 그대로 쓰면, 100처럼 똑같은 수를 여러 번 세게 된다. 18도, 9도 함정이었다.'},
+{id:36,lv:4,q:'동전 하나를 4번 던졌더니 <b>4번 모두 앞면</b>이 나왔다. 이 동전을 한 번 더 던질 때 <b>뒷면</b>이 나올 확률은?',o:['1/2','15/16','31/32','1/32'],a:0,
+ w:'그것: “앞면이 4번이나 연속으로 나왔어. 4번 중 적어도 한 번은 뒷면이 나올 확률이 15/16이었잖아? 이제 뒷면이 나올 차례야. 확률이 훨씬 높아졌을 거야.”',
+ h:'동전은 앞에서 무엇이 나왔는지 기억하지 못한다. 이미 끝난 4번은 잊고, 지금 던지는 이 한 번만 생각하자.',
+ e:'동전 던지기는 앞의 결과에 영향을 받지 않는다. 다섯 번째 던지기에서 뒷면이 나올 확률은 언제나 <b>1/2</b>.<br>15/16은 ‘던지기 전에’ 4번 중 적어도 한 번 뒷면이 나올 확률이다. 결과를 이미 본 뒤에는 쓸 수 없다.<br>‘이제 나올 차례’라는 생각은 확률에서 가장 흔한 착각, <b>도박사의 오류</b>다.'},
+{id:37,lv:5,q:'지금 이 ‘마지막 문제’는 질문 4개로 되어 있고, 질문마다 보기가 4개, 정답은 하나씩이다. 아무것도 모른 채 네 질문을 모두 찍어서 <b>한 번에 전부</b> 맞힐 확률은?',o:['1/16','1/64','1/256','1'],a:2,
+ w:'그것: “질문 하나를 찍어서 맞힐 확률은 1/4, 질문이 4개니까 1/4 + 1/4 + 1/4 + 1/4 = 1. 찍어도 반드시 나갈 수 있다는 뜻이야. …그러니까, 아무거나 골라.”',
+ h:'네 질문을 ‘모두’ 맞힌다는 것은 네 사건이 동시에 일어나는 것이다. 동시에 일어날 확률은 더할까, 곱할까? 그리고 확률이 1이라면 ‘반드시’ 맞는다는 뜻인데… 정말 그럴까?',
+ e:'네 질문을 모두 맞히려면 네 사건이 동시에 일어나야 하므로 <b>곱한다</b>.<br>1/4 × 1/4 × 1/4 × 1/4 = <b>1/256</b>.<br>더해서 1이 나온 것은 사건이 ‘동시에’가 아니라 ‘또는’일 때 쓰는 합의 법칙을 잘못 쓴 것이다.<br>찍어서 나갈 확률은 1/256. 하지만 너는 찍지 않고 <b>풀었다</b>. 그래서 이 문은 열린다.'},
 ];
 
 /* ---------- 아이템 ---------- */
@@ -856,6 +873,7 @@ const PUZ={
  arch:{title:'기록 보관함 키패드',floor:4,qs:[27,28],intro:'키패드 옆 메모: “기록은 확률을 기억한다.” 화면에 남은 시도 횟수가 ∞로 표시되어 있다.',
   async done(){give('pass');give('report');SFX.page();readNote('report');await waitNote();await say(['(…2학년 3반. 1층. 4시 44분.)','(내가 깨어난 그 교실이다. 멈춘 시계, 이름 없는 시험지.)','(그렇다면, 의식불명인 학생은…)','(출입증이 손에 쥐어져 있다. ‘시험장 출입증 — 2학년 3반’.)']);}},
  final:{title:'마지막 시험',floor:5,qs:[29,30,31,32,33],final:true,intro:'기회는 문제당 한 번. 힌트는 없다. 그림자 학생들이 고개를 들고 너를 본다.'},
+ gate:{title:'마지막 문제 — 출구',floor:5,qs:[34,35,36,37],gate:true,shuffle:true,intro:''},
 };
 
 /* =========================================================
@@ -990,9 +1008,10 @@ mkRoom('arch',{name:'기록실',floor:4,exit:'cb',amb:.95,lights:[{x:470,y:360,r
 
 /* ----- 최종 ----- */
 mkRoom('exam',{name:'시험장 — 2-3 교실',floor:5,amb:.9,lights:[{x:640,y:200,r:420,a:.35,kind:'red',col:'255,20,20',fl:1,ph:4}],draw:examRoom,
- spots:[{b:frontBB(.08,.6,.38,.84,.29,10),label:'내 자리에 앉는다',act:()=>startFinal()},
-  {b:sideBB(1,.19,1,.04,.32,6),label:'문',act:()=>{SFX.locked();toast('문이 열리지 않는다. 시험이 끝나기 전에는.');}}],
- async enter(){if(!S.flags.ch5){S.flags.ch5=1;checkpoint();await chapter('FINAL','마지막 시험');await say(['(최종 구역의 문 너머는… 2-3 교실이었다.)','(모든 자리에 그림자 학생들이 앉아 있다. 비어 있는 자리는 하나뿐.)','@그것|왔구나.','@그것|이제 알겠지? 나는 너야.','@그것|시험지를 받자마자 포기했던, 바로 그 순간의 너.','@그것|여긴 네가 멈춰 버린 시간이야. 4시 44분.','@그것|마지막 시험이다. 다섯 문제. 기회는 한 번씩.','@그것|네가 돌아갈 확률은… 네가 정해.']);return true;}return false;}});
+ spots:[{b:frontBB(.08,.6,.38,.84,.29,10),label:'내 자리에 앉는다',show:()=>!S.flags.finalDone,act:()=>startFinal()},
+  {b:frontBB(.08,.6,.38,.84,.29,10),label:'마지막 문제를 푼다',show:()=>S.flags.finalDone&&!S.flags.gateDone,act:()=>startGate()},
+  {b:sideBB(1,.19,1,.04,.32,6),label:'출구의 문',act:()=>{if(S.flags.finalDone&&!S.flags.gateDone){startGate();return;}SFX.locked();toast('문이 열리지 않는다. 시험이 끝나기 전에는.');}}],
+ async enter(){if(S.flags.finalDone&&!S.flags.gateDone){toast('출구의 문이 잠겨 있다. 마지막 문제를 모두 풀어야 열린다.',4000);return false;}if(!S.flags.ch5){S.flags.ch5=1;checkpoint();await chapter('FINAL','마지막 시험');await say(['(최종 구역의 문 너머는… 2-3 교실이었다.)','(모든 자리에 그림자 학생들이 앉아 있다. 비어 있는 자리는 하나뿐.)','@그것|왔구나.','@그것|이제 알겠지? 나는 너야.','@그것|시험지를 받자마자 포기했던, 바로 그 순간의 너.','@그것|여긴 네가 멈춰 버린 시간이야. 4시 44분.','@그것|마지막 시험이다. 다섯 문제. 기회는 한 번씩.','@그것|네가 돌아갈 확률은… 네가 정해.']);return true;}return false;}});
 
 /* ----- 엔딩 장면 ----- */
 SC.end_A={id:'end_A',name:'병실',floor:6,amb:.15,lights:[],spots:[],draw:hospitalBg};
@@ -1004,7 +1023,7 @@ SC.title={id:'title',name:'',floor:1,corridor:true,Z:6,amb:.9,cfg:C1,draw:g=>cor
 /* =========================================================
    게임 상태
    ========================================================= */
-let S=null,mode='title',paused=false,busy=false,curId='title',curScene=SC.title,dying=false,pendingRetry=null;
+let RUN=0,S=null,mode='title',paused=false,busy=false,curId='title',curScene=SC.title,dying=false,pendingRetry=null;
 let flickT=0,blackT=0,shakeA=0,ambT=22,ambBag=[],hbT=0,stepT=2,asT=0,darkT=0,lastDoorEv=-99,encOn=false,hudT=0,AP=null,HOV=null,gameClock=0;
 const LT={x:W/2,y:H/2,tx:W/2,ty:H/2};
 function newState(){return{scene:'wake',sanity:100,battery:100,light:false,inv:{},flags:{},pp:{},solved:{},qd:{},stats:{correct:0,wrong:0,time:0,scares:0,deaths:0},risk:0,chase:100,final:[],usedScares:[],cp:null,ver:1};}
@@ -1017,7 +1036,7 @@ function take(id){if(!S.inv[id])return;S.inv[id]--;if(S.inv[id]<=0)delete S.inv[
 function checkFrags(){if(has('frag_a')&&has('frag_b')){take('frag_a');take('frag_b');setTimeout(()=>{give('key_b');toast('두 조각을 맞추자 ‘지하실 열쇠’가 되었다!');},900);}}
 function hurt(n){if(!S||mode!=='play')return;S.sanity=clamp(S.sanity-n,0,100);const m=$('#sanM');m.style.filter='brightness(2.2)';setTimeout(()=>m.style.filter='',250);}
 function useItem(id,auto){if(!has(id))return;if(id==='battery'){take(id);S.battery=Math.min(100,S.battery+40);S.light=true;SFX.click();toast(auto?'배터리가 다 되어 새 배터리로 교체했다. (+40%)':'배터리를 교체했다. (+40%)');}else if(id==='sedative'){if(S.sanity>=100){toast('지금은 필요 없다.');return;}take(id);S.sanity=Math.min(100,S.sanity+35);SFX.good();toast('진정제를 먹었다. 숨이 조금 가라앉는다. (정신력 +35)');}save();}
-function lightOn(){return S&&S.flags.flash&&S.light&&S.battery>0&&blackT<=0;}
+function lightOn(){return mode==='play'&&S&&S.flags.flash&&S.light&&S.battery>0&&blackT<=0;}
 function lightR(){if(mode==='title')return 230;return 170+130*Math.min(1,S.battery/40);}
 function riskP(){if(!S||!curScene)return 0;const f=curScene.floor;const base=[.1,.16,.22,.3,.34,.4][f]??.2;return clamp(base+S.risk,.05,.8);}
 function maxLvl(){return[0,2,3,3][ST.scare];}
@@ -1057,24 +1076,45 @@ $('#noteClose').onclick=()=>{hide('#note');SFX.click();if(noteRes){const r=noteR
    퍼즐 (수학 문제)
    ========================================================= */
 let PZ=null;
-function openPuzzle(id){return new Promise(res=>{const P=PUZ[id];PZ={id,P,res,idx:S.pp[id]||0,t:P.timed||0,answered:false};
+function openPuzzle(id){return new Promise(res=>{const P=PUZ[id];PZ={id,P,res,idx:S.pp[id]||0,t:P.timed||0,answered:false,lock:false};
  if(PZ.idx>=P.qs.length){PZ=null;res(true);return;}
- $('#pzIntro').innerHTML=P.intro||'';$('#pzLeave').style.display=P.final?'none':'';$('#pzPaper').classList.toggle('final',!!P.final);$('#pzTimeBar').classList.toggle('on',!!P.timed);
+ $('#pzIntro').innerHTML=P.intro||'';$('#pzPaper').classList.toggle('final',!!(P.final||P.gate));$('#pzTimeBar').classList.toggle('on',!!P.timed);
  show('#puzzle');SFX.page();renderQ();});}
-function renderQ(){const q=Q[PZ.P.qs[PZ.idx]-1];PZ.q=q;PZ.answered=false;PZ.t=PZ.P.timed||0;PZ.wrongs=0;
- $('#pzTitle').textContent=PZ.P.title;$('#pzNum').textContent=`문제 ${PZ.idx+1} / ${PZ.P.qs.length}  ·  No.${q.id}`;
- $('#pzLv').textContent='난이도 '+'★'.repeat(q.lv)+'☆'.repeat(5-q.lv);$('#pzTimer').textContent=PZ.P.timed?'남은 시간 '+PZ.t+'초':(PZ.P.final?'기회: 1번':'');
+function leaveBtn(){const P=PZ.P,b=$('#pzLeave');if(P.final){b.style.display='none';return;}
+ if(P.gate){const f=S.flags.gateFails||0;b.style.display=f>=2?'':'none';b.textContent='포기한다…';return;}
+ b.style.display='';b.textContent='물러난다';}
+function renderQ(){const q=Q[PZ.P.qs[PZ.idx]-1];PZ.q=q;PZ.answered=false;PZ.reset=false;PZ.lock=false;PZ.t=PZ.P.timed||0;PZ.wrongs=0;
+ PZ.ord=PZ.P.shuffle?shuffle([0,1,2,3]):[0,1,2,3];PZ.apos=PZ.ord.indexOf(q.a);
+ $('#pzTitle').textContent=PZ.P.title;$('#pzNum').textContent=PZ.P.gate?`질문 ${PZ.idx+1} / ${PZ.P.qs.length}  ·  도전 ${(S.flags.gateFails||0)+1}회째`:`문제 ${PZ.idx+1} / ${PZ.P.qs.length}  ·  No.${q.id}`;
+ $('#pzLv').textContent='난이도 '+'★'.repeat(q.lv)+'☆'.repeat(5-q.lv);
+ $('#pzTimer').textContent=PZ.P.timed?'남은 시간 '+PZ.t+'초':PZ.P.final?'기회: 1번':PZ.P.gate?'하나라도 틀리면 처음부터':'';
  $('#pzQ').innerHTML=fr(q.q);const box=$('#pzOpts');box.innerHTML='';
- q.o.forEach((o,i)=>{const b=document.createElement('button');b.className='opt';b.innerHTML=`<span class="n">${'①②③④'[i]}</span><span>${fr(o)}</span>`;b.onclick=()=>pzAnswer(i);box.appendChild(b);});
+ PZ.ord.forEach((oi,i)=>{const b=document.createElement('button');b.className='opt';b.innerHTML=`<span class="n">${'①②③④'[i]}</span><span>${fr(q.o[oi])}</span>`;b.onclick=()=>pzAnswer(i);box.appendChild(b);});
  $('#pzFeedback').innerHTML='';$('#pzNext').classList.add('hidden');$('#pzStamp').classList.remove('on');$('#pzStamp').textContent='정답';
- if(PZ.idx>0)$('#pzIntro').innerHTML='';}
-function pzAnswer(i){if(!PZ||PZ.answered)return;const q=PZ.q,btns=$$('#pzOpts .opt'),b=btns[i];if(!b||b.disabled)return;
- if(PZ.P.final){PZ.answered=true;const ok=i===q.a;S.final.push(ok);S.qd[q.id]=1;S.pp.final=PZ.idx+1;btns.forEach(x=>x.disabled=true);btns[q.a].classList.add('right');
+ if(PZ.P.gate)$('#pzIntro').innerHTML=(PZ.idx===0?'<b>출구의 문은 아래 질문 4개를 <u>연속으로 모두</u> 맞혀야 열린다. 하나라도 틀리면 1번부터 다시, 보기 순서도 바뀐다.</b><br>':'')+`<span style="color:#8b1a1a">${q.w}</span>`;
+ else if(PZ.idx>0)$('#pzIntro').innerHTML='';
+ leaveBtn();}
+const DOUBT=['정말 그게 답이야?','틀리면 처음부터야. 그래도 괜찮겠어?','방금 손이 떨렸지? 다른 보기가 더 그럴듯해 보이는데.','난 이미 답을 알아. …그건 아니야. 아마도.','처음 떠오른 답이 늘 맞는 건 아니잖아.','한 번 더 계산해 봐. 아니, 그냥 바꾸는 게 낫겠다.'];
+async function pzAnswer(i){if(!PZ||PZ.answered||PZ.lock)return;const q=PZ.q,btns=$$('#pzOpts .opt'),b=btns[i];if(!b||b.disabled)return;
+ const ai=PZ.ord[i],ok=ai===q.a;
+ if(PZ.P.gate){PZ.lock=true;const cur=PZ;SFX.whisper(1.2,rnd(-.5,.5));
+  const v=await choice('그것이 속삭인다',`<p class="big">“${pick(DOUBT)}”</p><p>선택한 답: <b>${'①②③④'[i]} ${fr(q.o[ai])}</b></p><p class="dim" style="font-size:12.5px">그것은 정답일 때도, 오답일 때도 똑같이 묻는다.</p>`,[{label:'이 답으로 확정한다',v:1},{label:'다시 생각한다',v:0,cls:'ghost'}]);
+  if(PZ!==cur)return;PZ.lock=false;if(!v)return;
+  PZ.answered=true;btns.forEach(x=>x.disabled=true);
+  if(ok){S.stats.correct++;S.qd[q.id]=1;S.pp.gate=PZ.idx+1;SFX.good();b.classList.add('right');$('#pzStamp').classList.add('on');
+   $('#pzFeedback').innerHTML=`<div class="exp"><b>✔ 정답!</b><br>${fr(q.e)}</div>`;
+   $('#pzNext').textContent=PZ.idx+1>=PZ.P.qs.length?'출구의 문을 연다 ▶':'다음 질문 ▶';}
+  else{S.stats.wrong++;S.flags.gateFails=(S.flags.gateFails||0)+1;S.pp.gate=0;PZ.reset=true;hurt(10);SFX.bad();SFX.whisper(1.5);shake(10);flashScreen('#600',.45);b.classList.add('wrong');
+   $('#pzStamp').textContent='다시';$('#pzStamp').classList.add('on');
+   $('#pzFeedback').innerHTML=`<div class="hint"><b>✘ 틀렸다.</b> 그림자들이 낄낄거린다. 출구의 자물쇠가 다시 잠긴다.<br>힌트: ${fr(q.h)}</div><div class="pen">정신력 −10 · 1번 질문부터 다시 (보기 순서가 바뀐다)</div>`;
+   $('#pzNext').textContent='처음부터 다시 ▶';$('#pzPaper').animate([{transform:'translateX(-10px) rotate(-.4deg)'},{transform:'translateX(10px) rotate(-.4deg)'},{transform:'translateX(0) rotate(-.4deg)'}],{duration:260});}
+  $('#pzNext').classList.remove('hidden');leaveBtn();save();return;}
+ if(PZ.P.final){PZ.answered=true;S.final.push(ok);S.qd[q.id]=1;S.pp.final=PZ.idx+1;btns.forEach(x=>x.disabled=true);btns[PZ.apos].classList.add('right');
   if(ok){S.stats.correct++;SFX.good();$('#pzStamp').textContent='정답';$('#pzStamp').classList.add('on');}
   else{S.stats.wrong++;b.classList.add('wrong');SFX.bad();hurt(PEN[5]);shake(8);flashScreen('#600',.4);$('#pzStamp').textContent='오답';$('#pzStamp').classList.add('on');S.flags.turn=1;SFX.whisper(1.2);}
-  $('#pzFeedback').innerHTML=`<div class="exp"><b>${ok?'✔ 정답':'✘ 오답'}</b> — 정답은 ${'①②③④'[q.a]}<br>${fr(q.e)}</div>`+(ok?'':`<div class="pen">정신력 −${PEN[5]} · 그림자들이 웃는다.</div>`);
+  $('#pzFeedback').innerHTML=`<div class="exp"><b>${ok?'✔ 정답':'✘ 오답'}</b> — 정답은 ${'①②③④'[PZ.apos]}<br>${fr(q.e)}</div>`+(ok?'':`<div class="pen">정신력 −${PEN[5]} · 그림자들이 웃는다.</div>`);
   $('#pzNext').textContent=PZ.idx+1>=PZ.P.qs.length?'시험지를 제출한다 ▶':'다음 문제 ▶';$('#pzNext').classList.remove('hidden');save();return;}
- if(i===q.a){PZ.answered=true;S.stats.correct++;S.qd[q.id]=1;S.risk=clamp(S.risk-.03,-.15,.4);S.pp[PZ.id]=PZ.idx+1;SFX.good();
+ if(ok){PZ.answered=true;S.stats.correct++;S.qd[q.id]=1;S.risk=clamp(S.risk-.03,-.15,.4);S.pp[PZ.id]=PZ.idx+1;SFX.good();
   btns.forEach(x=>x.disabled=true);b.classList.add('right');$('#pzStamp').classList.add('on');
   $('#pzFeedback').innerHTML=`<div class="exp"><b>✔ 정답!</b><br>${fr(q.e)}</div><div class="pen" style="color:#1f3d7a">다음 문 위험 확률 −3%</div>`;
   $('#pzNext').textContent=PZ.idx+1>=PZ.P.qs.length?'완료 ▶':'다음 문제 ▶';$('#pzNext').classList.remove('hidden');save();}
@@ -1087,9 +1127,10 @@ function pzAnswer(i){if(!PZ||PZ.answered)return;const q=PZ.q,btns=$$('#pzOpts .o
   save();}}
 function pzTimeout(){if(!PZ||PZ.answered)return;S.stats.wrong++;hurt(8);S.chase=Math.max(0,S.chase-18);S.risk=clamp(S.risk+.04,-.15,.4);SFX.bad();SFX.knock(rnd(-1,1),4,.8);shake(10);flashScreen('#400',.5);
  $('#pzFeedback').innerHTML=`<div class="hint"><b>⏱ 시간 초과!</b> 문 밖에서 노크 소리가 들린다. 힌트: ${fr(PZ.q.h)}</div><div class="pen">정신력 −8 · 그것이 가까워졌다</div>`;PZ.t=PZ.P.timed;save();}
-function pzNext(){if(!PZ||!PZ.answered)return;SFX.click();PZ.idx++;if(PZ.idx>=PZ.P.qs.length){const{id,res}=PZ;hide('#puzzle');PZ=null;S.solved[id]=1;save();res(true);}else renderQ();}
-function closePuzzle(){if(!PZ)return;hide('#puzzle');const r=PZ.res;PZ=null;r(false);}
-$('#pzNext').onclick=pzNext;$('#pzLeave').onclick=()=>{SFX.click();closePuzzle();};
+function pzNext(){if(!PZ||!PZ.answered||PZ.lock)return;SFX.click();if(PZ.reset){PZ.idx=0;renderQ();return;}PZ.idx++;if(PZ.idx>=PZ.P.qs.length){const{id,res}=PZ;hide('#puzzle');PZ=null;S.solved[id]=1;save();res(true);}else renderQ();}
+function closePuzzle(){if(!PZ)return;hide('#puzzle');hide('#choice');const r=PZ.res;PZ=null;r(false);}
+$('#pzNext').onclick=pzNext;
+$('#pzLeave').onclick=async()=>{SFX.click();if(PZ&&PZ.P.gate){if(PZ.lock)return;PZ.lock=true;const cur=PZ;const y=await confirmBox('<b style="color:#e66">정말 포기할까?</b><br>포기하면 이 교실에서 영원히 나갈 수 없다. (BAD ENDING)');if(PZ!==cur)return;PZ.lock=false;if(!y)return;hide('#puzzle');const r=PZ.res;PZ=null;r('giveup');return;}closePuzzle();};
 async function doPuzzle(id){if(S.solved[id]){toast('이미 해결했다.');return;}const ok=await openPuzzle(id);if(ok&&mode==='play'&&PUZ[id].done)await PUZ[id].done();save();if(mode==='play')renderBg();}
 
 /* =========================================================
@@ -1171,51 +1212,57 @@ function setScene(id){curId=id;curScene=SC[id];renderBg();if(S&&mode==='play')S.
 function renderBg(){bctx.save();bctx.setTransform(1,0,0,1,0,0);bctx.globalAlpha=1;bctx.globalCompositeOperation='source-over';curScene.draw(bctx);bctx.restore();}
 
 /* ---------- 3층 추격 ---------- */
-async function encounter(){encOn=true;if(PZ)closePuzzle();SFX.bang(1);shake(16);flashScreen('#300',.6);
+async function encounter(){const run=RUN;encOn=true;if(PZ)closePuzzle();SFX.bang(1);shake(16);flashScreen('#300',.6);
  await say(['(쾅! 문이 벌컥 열린다.)','(그것이 들어온다. 지금 당장 선택해야 한다!)']);
  const opts=[{label:'사물함에 숨는다',sub:`그것은 숨을 곳 4곳 중 1곳만 뒤진다 → 생존 확률 ${fr('3/4')} · 성공 시 거리 60`,v:'hide'},{label:'반대편으로 달린다',sub:`생존 확률 ${fr('1/2')} · 성공 시 거리 100 (완전히 따돌림)`,v:'run'}];
  opts.push({label:'손전등을 정면으로 비춘다',sub:`배터리 30% 소모 · 생존 확률 ${fr('5/6')} · 성공 시 거리 75`+(S.battery<30?' (배터리 부족)':''),v:'light',dis:S.battery<30});
  const v=await choice('그것이 온다!','<p>그것과의 거리가 0이 되었다. 확률을 계산하고 선택하라.</p>',opts);
  const p=v==='hide'?3/4:v==='run'?1/2:5/6;const lab=v==='hide'?'3/4':v==='run'?'1/2':'5/6';if(v==='light')S.battery-=30;
- const ok=await wheel(p,'생존 확률 '+lab,'생존','발각');
+ const ok=await wheel(p,'생존 확률 '+lab,'생존','발각');if(run!==RUN||mode!=='play'){encOn=false;return;}
  if(ok){SFX.steps(5,-.4,.8,.5,.35);await say([v==='hide'?'(사물함 틈으로… 그것의 다리가 지나간다. 숨을 참는다.)':v==='run'?'(뒤도 돌아보지 않고 달렸다. 발소리가 멀어진다.)':'(빛을 정면으로 받은 그것이 비명을 지르며 물러났다.)']);S.chase=v==='hide'?60:v==='run'?100:75;}
- else{await scriptedScare('face');hurt(18);S.chase=65;if(mode==='play')await say(['(차가운 손이 목덜미를 움켜쥐었다… 간신히 뿌리치고 빠져나왔다.)']);}
+ else{await scriptedScare('face');if(run!==RUN)return;hurt(18);S.chase=65;if(S.sanity<=0){encOn=false;return;}if(mode==='play')await say(['(차가운 손이 목덜미를 움켜쥐었다… 간신히 뿌리치고 빠져나왔다.)']);}
  encOn=false;save();}
 
 /* ---------- 최종 시험 · 엔딩 ---------- */
-async function startFinal(){if(S.flags.finalDone)return;if(!S.pp.final)await say(['(의자에 앉자, 책상 위 시험지가 저절로 펼쳐진다.)','@그것|시작.']);const ok=await openPuzzle('final');if(!ok||mode!=='play')return;S.flags.finalDone=1;save();await finishGame();}
-async function finishGame(){const sc=S.final.filter(Boolean).length,dc=diaryCount();const type=sc>=4&&dc===5?'A':sc>=3?'B':'C';mode='ending';$('#hud').classList.add('hidden');droneLevel(.4);
- if(type==='A'){await say([`@그것|…${sc}문제.`,'@그것|무서웠지. 틀릴까 봐. 그래서 처음부터 0이라고 믿고 싶었던 거야.','(그것의 얼굴이 천천히… 내 얼굴이 된다.)','@나|이제 알아. 확률이 아무리 작아도, 0이 아니라면 해 볼 수 있어.','(그것이 처음으로 웃었다. 그리고 재처럼 흩어졌다.)','(창문으로 하얀 빛이 쏟아져 들어온다.)']);flashScreen('#fff',1);await fade(1,1200);setScene('end_A');droneLevel(.15);await wait(600);for(let i=0;i<3;i++)SFX.beep(i*.8);await fade(0,2000);await say(['삐— 삐— 삐—','@???|…환자분? 제 목소리 들리시면 손가락을 움직여 보세요.','(나는 손가락을… 움직였다.)','@엄마|…! 선생님, 얘가… 얘가 눈을…!']);}
- else if(type==='B'){await say([`@그것|…${sc}문제. 합격이야.`,'@그것|하지만 넌 아직 다 기억해 내지 못했어.',`(찾은 일기장 조각: ${dc} / 5)`,'(교실 문이 열렸다. 나는 복도를 달려, 현관을 지나, 교문 밖으로 뛰쳐나갔다.)']);await fade(1,900);setScene('end_B');await fade(0,1500);await say(['(밤공기가 차갑다. 돌아보자, 2-3 교실 창문에 누군가 서 있었다.)','(……)','(눈을 뜨니 교실이다. 시계는 4시 44분.)']);}
- else{await say([`@그것|…${sc}문제.`,'@그것|괜찮아. 여기선 아무도 혼내지 않아. 아무도 기다리지 않아.','(그림자 학생들이 일제히 고개를 돌린다. 얼굴이… 없다.)','(내 손끝이 검게 물들기 시작한다.)']);S.flags.turn=1;await fade(1,900);setScene('end_C');await fade(0,1500);}
+async function startFinal(){if(S.flags.finalDone){startGate();return;}if(!S.pp.final)await say(['(의자에 앉자, 책상 위 시험지가 저절로 펼쳐진다.)','@그것|시작.']);const run=RUN;const ok=await openPuzzle('final');if(!ok||mode!=='play'||run!==RUN)return;S.flags.finalDone=1;
+ const sc=S.final.filter(Boolean).length;checkpoint();
+ await say([`@그것|…${sc}문제. 점수는 정해졌어.`,'@그것|그런데 말이야. 점수가 문을 열어 주진 않아.','(교실 문에 붉은 자물쇠가 걸린다. 자물쇠에 숫자 대신 질문이 새겨져 있다.)','@그것|마지막 문제. 질문 네 개를 연속으로 전부 맞혀야 이 문이 열려.','@그것|하나라도 틀리면 처음부터. 그리고 나는 질문마다 친절하게 풀이를 알려 줄 거야.','@그것|…내 말을 믿을지 말지는, 네가 정해.']);
+ if(run!==RUN)return;startGate();}
+async function startGate(){if(S.flags.gateDone||PZ)return;const run=RUN;const r=await openPuzzle('gate');if(mode!=='play'||run!==RUN)return;
+ if(r==='giveup'){await finishGame('C');return;}if(!r)return;S.flags.gateDone=1;save();
+ SFX.locked();await wait(400);SFX.bang(.7);shake(8);await say(['(마지막 답을 쓰는 순간, 붉은 자물쇠가 바닥에 떨어졌다.)','@그것|…찍지 않았구나. 끝까지.']);if(run!==RUN)return;await finishGame();}
+async function finishGame(force){const sc=S.final.filter(Boolean).length,dc=diaryCount();const type=force||(sc>=4&&dc===5?'A':'B');mode='ending';$('#hud').classList.add('hidden');droneLevel(.4);
+ if(type==='A'){await say([`@그것|최종 시험 ${sc}문제. 그리고 마지막 문제까지.`,'@그것|무서웠지. 틀릴까 봐. 그래서 처음부터 0이라고 믿고 싶었던 거야.','(그것의 얼굴이 천천히… 내 얼굴이 된다.)','@나|이제 알아. 확률이 아무리 작아도, 0이 아니라면 해 볼 수 있어.','(그것이 처음으로 웃었다. 그리고 재처럼 흩어졌다.)','(창문으로 하얀 빛이 쏟아져 들어온다.)']);flashScreen('#fff',1);await fade(1,1200);setScene('end_A');droneLevel(.15);await wait(600);for(let i=0;i<3;i++)SFX.beep(i*.8);await fade(0,2000);await say(['삐— 삐— 삐—','@???|…환자분? 제 목소리 들리시면 손가락을 움직여 보세요.','(나는 손가락을… 움직였다.)','@엄마|…! 선생님, 얘가… 얘가 눈을…!']);}
+ else if(type==='B'){await say([`@그것|문은 열렸어. 최종 시험은 ${sc}문제였지.`,'@그것|하지만 넌 아직 다 기억해 내지 못했어.',`(찾은 일기장 조각: ${dc} / 5)`,'(나는 복도를 달려, 현관을 지나, 교문 밖으로 뛰쳐나갔다.)']);await fade(1,900);setScene('end_B');await fade(0,1500);await say(['(밤공기가 차갑다. 돌아보자, 2-3 교실 창문에 누군가 서 있었다.)','(……)','(눈을 뜨니 교실이다. 시계는 4시 44분.)']);}
+ else{await say(['@그것|…그래. 포기하는 건 편하지.','@그것|괜찮아. 여기선 아무도 혼내지 않아. 아무도 기다리지 않아.','(그림자 학생들이 일제히 고개를 돌린다. 얼굴이… 없다.)','(내 손끝이 검게 물들기 시작한다.)']);S.flags.turn=1;await fade(1,900);setScene('end_C');await fade(0,1500);}
  showEnding(type);}
 const ENDS={
- A:{tag:'TRUE ENDING',title:'마지막 확률',text:'사고 후 47일.\n의사는 깨어날 확률을 ‘거의 0’이라고 했다.\n\n하지만 0은 아니었다.\n\n— 확률은 미래를 정하지 않는다. 포기하지 않는 사람에게, 그것은 ‘가능성’이라고 불린다.',d:'최종 시험 4문제 이상 + 일기장 5조각'},
- B:{tag:'NORMAL ENDING',title:'끝나지 않는 방과 후',text:'학교를 빠져나왔다. 그런데, 다시 그 교실이다.\n흩어진 기억을 모두 찾지 못하면 이 밤은 끝나지 않는다.\n\n(힌트: 일기장 조각 5개를 모두 모으고, 마지막 시험에서 4문제 이상 맞혀라.)',d:'최종 시험 3문제 이상'},
- C:{tag:'BAD ENDING',title:'영원한 재시험',text:'다음 학생이 깨어날 때까지,\n너는 이 교실의 학생이다.\n\n그림자 하나가 늘었다.',d:'최종 시험 2문제 이하'},
+ A:{tag:'TRUE ENDING',title:'마지막 확률',text:'사고 후 47일.\n의사는 깨어날 확률을 ‘거의 0’이라고 했다.\n\n하지만 0은 아니었다.\n\n— 확률은 미래를 정하지 않는다. 포기하지 않는 사람에게, 그것은 ‘가능성’이라고 불린다.',d:'최종 시험 4문제 이상 + 일기장 5조각 + 마지막 문제 통과'},
+ B:{tag:'NORMAL ENDING',title:'끝나지 않는 방과 후',text:'학교를 빠져나왔다. 그런데, 다시 그 교실이다.\n흩어진 기억을 모두 찾지 못하면 이 밤은 끝나지 않는다.\n\n(힌트: 일기장 조각 5개를 모두 모으고, 최종 시험에서 4문제 이상 맞혀라.)',d:'마지막 문제 통과 (진엔딩 조건 미달)'},
+ C:{tag:'BAD ENDING',title:'영원한 재시험',text:'포기한 순간, 문은 영원히 잠겼다.\n다음 학생이 깨어날 때까지,\n너는 이 교실의 학생이다.\n\n그림자 하나가 늘었다.',d:'마지막 문제에서 포기하기'},
  D:{tag:'GAME OVER',title:'붙잡힘',text:'정신력이 바닥났다.\n어둠 속에서 차가운 손이 어깨를 잡았다.\n“포기해.”\n\n— 마지막 체크포인트에서 다시 시작할 수 있다.',d:'정신력 0'}};
 function showEnding(type){const e=ENDS[type];const rec=load(END_KEY)||{};rec[type]=1;store(END_KEY,rec);mode='ending';$('#hud').classList.add('hidden');
  $('#endTag').textContent=e.tag;$('#endTitle').textContent=e.title;$('#endText').textContent=e.text;const st=S.stats;
- $('#endStats').innerHTML=[['플레이 시간',fmtTime(st.time)],['진행률',prog()+'%'],['정답 수',st.correct],['오답 수',st.wrong],['정답률',acc()],['최종 시험',S.final.filter(Boolean).length+' / 5'],['일기장 조각',diaryCount()+' / 5'],['공포 이벤트',st.scares+'회']].map(([a,b])=>`<div><span>${a}</span><b>${b}</b></div>`).join('');
+ $('#endStats').innerHTML=[['플레이 시간',fmtTime(st.time)],['진행률',prog()+'%'],['정답 수',st.correct],['오답 수',st.wrong],['정답률',acc()],['최종 시험',S.final.filter(Boolean).length+' / 5'],['일기장 조각',diaryCount()+' / 5'],['공포 이벤트',st.scares+'회'],['마지막 문제 도전',S.flags.gateDone?((S.flags.gateFails||0)+1)+'회 만에 통과':(S.flags.gateFails?(S.flags.gateFails)+'회 실패':'-')],['게임 오버',(st.deaths||0)+'회']].map(([a,b])=>`<div><span>${a}</span><b>${b}</b></div>`).join('');
  const bt=$('#endBtns');bt.innerHTML='';const mkb=(t,f,c='')=>{const b=document.createElement('button');b.className='btn '+c;b.textContent=t;b.onclick=()=>{SFX.click();f();};bt.appendChild(b);};
  if(type==='D'){mkb('체크포인트에서 다시',()=>{S=pendingRetry;pendingRetry=null;startPlay(S.scene);},'red');mkb('타이틀로',toTitle,'ghost');}
  else{unstore(SAVE_KEY);mkb('처음부터 다시',()=>{hide('#ending');newGame();},'red');mkb('타이틀로',toTitle,'ghost');}
  setTimeout(()=>show('#ending'),type==='D'?200:900);}
-async function die(){if(dying)return;dying=true;if(PZ)closePuzzle();$$('.modal.on').forEach(m=>m.classList.remove('on'));if(DLG){clearInterval(DLG.timer);DLG=null;$('#dialog').classList.remove('on');}
+async function die(){if(dying)return;dying=true;RUN++;if(PZ)closePuzzle();$$('.modal.on').forEach(m=>m.classList.remove('on'));if(DLG){clearInterval(DLG.timer);DLG=null;$('#dialog').classList.remove('on');}
  const ml=maxLvl();if(ml>=3)await scare('face');else if(ml>=1)await scare('text');else{SFX.thud(1);await wait(800);}
  const st=S.stats;st.deaths=(st.deaths||0)+1;let ns;if(S.cp){ns=JSON.parse(S.cp);ns.cp=S.cp;}else ns=newState();ns.stats=st;ns.sanity=Math.max(ns.sanity,70);ns.battery=Math.max(ns.battery,60);ns.chase=100;
  store(SAVE_KEY,ns);pendingRetry=ns;mode='ending';busy=false;encOn=false;setScene('end_D');showEnding('D');dying=false;}
 
 /* ---------- 시작 · 타이틀 ---------- */
-function startPlay(scene){mode='play';paused=false;busy=false;dying=false;encOn=false;hide('#ending');$('#title').classList.remove('on');$('#hud').classList.remove('hidden');musicBox(false);droneLevel(1);
+function startPlay(scene){RUN++;mode='play';paused=false;busy=false;dying=false;encOn=false;hide('#ending');$('#title').classList.remove('on');$('#hud').classList.remove('hidden');musicBox(false);droneLevel(1);
  const f=$('#fade');f.style.transition='none';f.style.opacity=1;setScene(SC[scene]&&!scene.startsWith('end')&&scene!=='title'?scene:'wake');if(S.flags.flash&&S.battery>0)S.light=true;fade(0,900);ambT=15;hud(true);save();}
-async function newGame(){audioInit();S=newState();mode='play';paused=false;busy=false;$('#title').classList.remove('on');hide('#ending');$('#hud').classList.remove('hidden');musicBox(false);droneLevel(.7);
+async function newGame(){audioInit();RUN++;S=newState();mode='play';paused=false;busy=false;$('#title').classList.remove('on');hide('#ending');$('#hud').classList.remove('hidden');musicBox(false);droneLevel(.7);
  const f=$('#fade');f.style.transition='none';f.style.opacity=1;setScene('wake');hud(true);ambT=40;
  await wait(700);SFX.tick();await wait(900);SFX.tick();await wait(900);SFX.tick();
  await say(['……','@???|……일어나.','@???|……시험 시간이야.']);droneLevel(1);await fade(0,1800);
  await say(['(머리가 깨질 듯 아프다. 여기는… 우리 반 교실이다.)','(창밖은 칠흑같이 어둡다. 아무도 없다.)','(교탁 위에서 무언가 희미하게 반짝인다.)']);
  toast('◇ 표시를 클릭(터치)해 조사하세요. 먼저 교탁을 조사해 보자.',4000);save();}
-function toTitle(){save();mode='title';paused=false;$$('.modal.on').forEach(m=>m.classList.remove('on'));hide('#ending');$('#hud').classList.add('hidden');if(DLG){clearInterval(DLG.timer);DLG=null;$('#dialog').classList.remove('on');}if(PZ){hide('#puzzle');PZ=null;}
+function toTitle(){save();RUN++;mode='title';paused=false;$$('.modal.on').forEach(m=>m.classList.remove('on'));hide('#ending');$('#hud').classList.add('hidden');if(DLG){clearInterval(DLG.timer);DLG=null;$('#dialog').classList.remove('on');}if(PZ){hide('#puzzle');PZ=null;}
  setScene('title');$('#title').classList.add('on');fade(0,600);refreshTitle();musicBox(true);droneLevel(.5);}
 function refreshTitle(){const s=load(SAVE_KEY);const b=$('#tCont');b.disabled=!s;b.innerHTML=s?`이어하기 <small>${SC[s.scene]?SC[s.scene].name:''} · ${fmtTime(s.stats.time)} · 진행률 ${Math.round(Object.keys(s.qd||{}).length/Q.length*100)}%</small>`:'이어하기 <small>저장된 기록 없음</small>';}
 
@@ -1345,9 +1392,10 @@ function update(dt,t){
  if(mode!=='play'||paused||!S)return;
  gameClock+=dt;S.stats.time+=dt;
  if(PZ&&PZ.P.timed&&!PZ.answered&&!anyModalExcept('#puzzle')){PZ.t-=dt;$('#pzTimeBar i').style.width=clamp(PZ.t/PZ.P.timed*100,0,100)+'%';$('#pzTimer').textContent='남은 시간 '+Math.max(0,Math.ceil(PZ.t))+'초';if(PZ.t<=0)pzTimeout();}
- if(S.flags.flash&&S.light&&S.battery>0){const dk=(curScene.floor===4?1.45:1)*(PZ?.35:1)*(DLG?.25:1);S.battery-=dt*(100/300)*dk;if(S.battery<=0){S.battery=0;if(has('battery'))useItem('battery',true);else{S.light=false;toast('손전등이 꺼졌다… 배터리가 없다.');SFX.buzz(.4);}}}
+ const uiOpen=anyModalExcept('#puzzle')||isOn('#chapter');
+ if(S.flags.flash&&S.light&&S.battery>0&&!uiOpen){const dk=(curScene.floor===4?1.45:1)*(PZ?.35:1)*(DLG?.25:1);S.battery-=dt*(100/300)*dk;if(S.battery<=0){S.battery=0;if(has('battery'))useItem('battery',true);else{S.light=false;toast('손전등이 꺼졌다… 배터리가 없다.');SFX.buzz(.4);}}}
  const dark=S.flags.flash&&!lightOn()&&curScene.floor>=1&&curScene.floor<=5;
- if(dark&&!PZ&&!DLG){S.sanity-=dt*.35;darkT+=dt;if(darkT>22&&S.battery<=0&&!has('battery')&&!S.flags['em'+curScene.floor]){S.flags['em'+curScene.floor]=1;give('battery');toast('어둠 속을 더듬다 손끝에 무언가 닿았다… 배터리다!');}}else darkT=0;
+ if(dark&&!PZ&&!DLG&&!uiOpen){S.sanity-=dt*.35;darkT+=dt;if(darkT>22&&S.battery<=0&&!has('battery')&&!S.flags['em'+curScene.floor]){S.flags['em'+curScene.floor]=1;give('battery');toast('어둠 속을 더듬다 손끝에 무언가 닿았다… 배터리다!');}}else darkT=0;
  const chasing=S.flags.chase&&CHASE_SCENES.has(curId);
  if(chasing){if(!DLG&&!encOn&&!anyModalExcept('#puzzle'))S.chase-=dt*(PZ?.12:.3);stepT-=dt;if(stepT<=0){stepT=.55+S.chase/100*3.2;SFX.step(rnd(-.6,.6),.12+.5*(1-S.chase/100));}if(S.chase<=0&&!encOn&&!JS.on&&!DLG&&!busy&&!paused&&!anyModalExcept('#puzzle'))encounter();}
  const danger=Math.max(1-S.sanity/45,chasing?1-S.chase/45:0);if(danger>0){hbT-=dt;if(hbT<=0){hbT=1.3-danger*.7;SFX.heart(.2+.45*Math.min(1,danger));}}
