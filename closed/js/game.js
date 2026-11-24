@@ -373,7 +373,7 @@ addEventListener('keydown', e => {
 });
 addEventListener('keyup', e => { G.keys[e.code] = false; });
 addEventListener('mousemove', e => {
-  if (G.mode !== 'play' || !document.pointerLockElement || UI.modalOpen) return;
+  if (G.mode !== 'play' || UI.modalOpen || (!document.pointerLockElement && !(e.buttons & 1))) return;
   G.player.yaw -= e.movementX * 0.0022 * G.sens; G.player.pitch = Math.max(-1.4, Math.min(1.4, G.player.pitch - e.movementY * 0.0022 * G.sens));
 });
 addEventListener('resize', () => { camera.aspect = innerWidth / innerHeight; camera.updateProjectionMatrix(); renderer.setSize(innerWidth, innerHeight); });
