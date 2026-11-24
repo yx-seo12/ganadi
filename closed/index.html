@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<title>폐장 (CLOSED)</title>
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<div id="game"></div>
+
+<!-- 화면 효과 -->
+<div id="fx">
+  <canvas id="noise" width="160" height="90"></canvas>
+  <div id="scan"></div><div id="vig"></div><div id="redflash"></div><div id="blackout"></div>
+  <canvas id="hands" width="800" height="450"></canvas>
+  <canvas id="scare" width="512" height="512"></canvas>
+  <div id="vhs"><span>▶ PLAY</span><span id="vhsTime">00:00:00</span></div>
+</div>
+
+<!-- HUD -->
+<div id="hud" class="hidden">
+  <div id="objBox">
+    <div id="chapterName"></div>
+    <div id="objective"></div>
+    <div class="pbar"><i id="progFill"></i></div>
+    <div id="progText"></div>
+  </div>
+  <div id="stats">
+    <div class="bar"><b>손전등</b><span><i id="batFill"></i></span></div>
+    <div class="bar"><b>정신력</b><span><i id="sanFill"></i></span></div>
+    <div class="bar"><b>체력</b><span><i id="staFill"></i></span></div>
+    <div id="info"></div>
+  </div>
+  <div id="compass"><div id="arrow">▲</div><div id="dist"></div></div>
+  <div id="cross"></div>
+  <div id="prompt"></div>
+  <div id="timer"></div>
+  <div id="subtitle"></div>
+  <div id="toast"></div>
+  <button id="pauseBtn" class="tbtn">II</button>
+</div>
+
+<!-- 터치 조작 -->
+<div id="touch" class="hidden">
+  <div id="joy"><div id="knob"></div></div>
+  <div id="tbtns">
+    <button class="tbtn" id="tE">E</button>
+    <button class="tbtn" id="tF">🔦</button>
+    <button class="tbtn" id="tRun">달리기</button>
+  </div>
+</div>
+
+<!-- 모달 (문제/쪽지/선택) -->
+<div id="modal" class="hidden"><div id="modalBox"></div></div>
+
+<!-- 시작 화면 -->
+<div id="title" class="screen">
+  <div class="tinner">
+    <div class="logo">폐 장</div>
+    <div class="logo2">C L O S E D</div>
+    <p class="tag">해피랜드 · 1996년 11월 24일 폐쇄</p>
+    <div class="menu">
+      <button id="bNew">새 게임</button>
+      <button id="bCont">이어하기</button>
+      <button id="bHow">조작법</button>
+    </div>
+    <p class="warn">⚠ 갑작스러운 소리와 놀라운 장면이 포함되어 있습니다. 헤드폰 사용을 권장합니다.</p>
+    <div id="best"></div>
+  </div>
+</div>
+
+<div id="how" class="screen hidden">
+  <div class="tinner small">
+    <h2>조작법</h2>
+    <table>
+      <tr><td>WASD / 방향키</td><td>이동</td></tr>
+      <tr><td>마우스</td><td>시점 조작 (화면 클릭 시 고정)</td></tr>
+      <tr><td>Shift</td><td>달리기 (체력 소모)</td></tr>
+      <tr><td>E</td><td>조사 · 상호작용 · 줍기</td></tr>
+      <tr><td>F</td><td>손전등 켜기/끄기 (배터리 소모)</td></tr>
+      <tr><td>ESC / P</td><td>일시정지</td></tr>
+      <tr><td>모바일</td><td>왼쪽 조이스틱 이동, 오른쪽 드래그 시점, 버튼 조작</td></tr>
+    </table>
+    <p>목표: 네 개의 놀이기구(관람차 → 롤러코스터 → 회전목마 → 범퍼카)를 모두 작동시키고 정문으로 탈출하라.<br>
+    각 장치는 수학 문제를 풀어야 작동한다. 오답은 <span class="red">그것</span>을 부른다.<br>
+    정신력이 0이 되면 끝이다. 숨겨진 <b>사진 조각 5장</b>을 찾아라.</p>
+    <div class="menu"><button id="bBack">돌아가기</button></div>
+  </div>
+</div>
+
+<div id="pause" class="screen hidden">
+  <div class="tinner small">
+    <h2>일시정지</h2>
+    <div id="pauseStats"></div>
+    <label class="vol">볼륨 <input type="range" id="vol" min="0" max="1" step="0.05" value="0.9"></label>
+    <label class="vol">마우스 감도 <input type="range" id="sens" min="0.5" max="2.5" step="0.1" value="1"></label>
+    <div class="menu">
+      <button id="bResume">계속하기</button>
+      <button id="bRestart">처음부터 다시</button>
+      <button id="bTitle">타이틀로 (자동 저장됨)</button>
+    </div>
+  </div>
+</div>
+
+<div id="ending" class="screen hidden">
+  <div class="tinner">
+    <div id="endType" class="logo small"></div>
+    <div id="endText"></div>
+    <div id="endStats"></div>
+    <div class="menu">
+      <button id="bAgain">다시 하기</button>
+      <button id="bEndTitle">타이틀로</button>
+    </div>
+  </div>
+</div>
+
+<div id="loading" class="screen"><div class="tinner"><div class="logo2">LOADING...</div></div></div>
+
+<script src="lib/three.min.js"></script>
+<script src="js/questions.js"></script>
+<script src="js/audio.js"></script>
+<script src="js/world.js"></script>
+<script src="js/ui.js"></script>
+<script src="js/horror.js"></script>
+<script src="js/game.js"></script>
+</body>
+</html>
