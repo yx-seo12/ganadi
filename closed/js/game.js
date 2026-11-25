@@ -435,13 +435,20 @@ function updateHUD(dt) {
   hudT -= dt; const S = G.state;
   UI.hud(S);
   if (hudT > 0) return; hudT = 0.2;
-  const [h, o] = objective();
+  const [h, o, tgt] = objective();
   UI.$('chapterName').textContent = h; UI.$('objective').textContent = o;
   const steps = RIDES.reduce((a, r) => a + (S.items[r.item] ? 1 : 0) + (stDone(r.A) ? 1 : 0) + (stDone(r.B) ? 1 : 0), 0) + (S.final >= 1 ? 1 : 0) + (S.final >= 2 ? 1 : 0);
   UI.$('progFill').style.width = (steps / 14 * 100) + '%';
   UI.$('progText').textContent = `진행률 ${Math.round(steps / 14 * 100)}% · 놀이기구 ${S.rides.filter(Boolean).length}/4 · 문제 ${Object.keys(S.solved).length}/${QUESTIONS.length}`;
   const photos = PHOTOS.filter((_, k) => S.picked['photo' + k]).length;
   UI.$('info').innerHTML = `사진 조각 ${photos}/5<br>수학 ${S.stats.points}점 · 정답률 ${accuracy()}%`;
+  const ar = UI.$('arrow'), ds = UI.$('dist');
+  if (tgt) {
+    const dx = tgt[0] - G.player.x, dz = tgt[1] - G.player.z;
+    const ang = Math.atan2(-dx, -dz) - G.player.yaw;
+    ar.style.transform = `rotate(${-ang}rad)`; ds.textContent = Math.round(Math.hypot(dx, dz)) + 'm';
+    ar.style.visibility = 'visible';
+  } else { ar.style.visibility = 'hidden'; ds.textContent = ''; }
   const tm = Math.floor(S.time); UI.$('vhsTime').textContent = `AM 0${2 + Math.floor(tm / 3600)}:${String(Math.floor(tm / 60) % 60).padStart(2, '0')}:${String(tm % 60).padStart(2, '0')}`;
 }
 
