@@ -96,6 +96,10 @@ const AudioFX = {
     this.noise({ dur: 0.3, type: 'lowpass', freq: 300, gain: 0.5, delay: 0 });
     this.tone({ f: 880, dur: 0.15, type: 'square', gain: 0.05, delay: 2.4 });
   },
+  powerDown() {
+    this.tone({ f: 220, f2: 30, dur: 2.5, type: 'sawtooth', gain: 0.12 });
+    this.noise({ dur: 0.4, type: 'lowpass', freq: 300, gain: 0.5 });
+  },
   pickup() { this.tone({ f: 660, f2: 990, dur: 0.25, type: 'triangle', gain: 0.12 }); },
   correct() { this.tone({ f: 523, dur: 0.2, type: 'triangle', gain: 0.12 }); this.tone({ f: 784, dur: 0.4, type: 'triangle', gain: 0.12, delay: 0.15 }); },
   wrong() { this.tone({ f: 120, f2: 80, dur: 0.6, type: 'sawtooth', gain: 0.2 }); },

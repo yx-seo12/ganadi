@@ -23,14 +23,14 @@ const FINAL = { id: 'fin', name: '정문 제어 장치', pos: [4, 71], qs: ['f1'
 const BATTERIES = [[-6, 58], [14, 40], [-48, 42], [52, 44], [-15, -10], [-58, -26], [30, -10], [60, -30], [0, -50], [-30, 62], [20, 60], [-62, 10]];
 const PHOTOS = [[-52, 21], [70, 3], [-57, -44], [52, -42], [-14, 70]];
 const NOTES = [
-  { pos: [2, 62], t: '입구 게시판', x: '해피랜드를 찾아주신 손님께.\n1996년 11월 24일, 관람차 사고 이후\n본 놀이공원은 무기한 폐장합니다.\n\n(누군가 볼펜으로 덧써 놓았다)\n"아직 운행이 안 끝났어. 네 개 다 돌려야 나갈 수 있어."' },
+  { pos: [2, 62], t: '입구 게시판', x: '해피랜드를 찾아주신 손님께.\n1996년 11월 24일, 관람차 사고 이후\n본 놀이공원은 무기한 폐장합니다.\n\n(누군가 볼펜으로 덧써 놓았다)\n"놀이기구들이 아직 혼자 돌고 있어. 네 개 다 전원을 꺼야 나갈 수 있어."' },
   { pos: [-35, 46], t: '정비 메모 #1 — 관람차', x: '관람차 제어반 퓨즈 분실. 서쪽 벤치 근처에 떨어뜨린 듯.\n\n그림자 측정기는 같은 시각의 그림자 길이로 높이를 잰다.\n햇빛은 평행 → 삼각형은 닮음.\n(막대 높이) : (막대 그림자) = (기둥 높이) : (기둥 그림자)' },
   { pos: [41, 45], t: '정비 메모 #2 — 롤러코스터', x: '레일 한 구간이 끊어졌다. 수평 거리와 높이 차를 재면\n피타고라스 정리로 필요한 레일 길이가 나온다.\na² + b² = c²\n\n전력 케이블은 동쪽 끝 창고 쪽에 있다.\n…맨 뒷좌석에는 앉지 마라. 거긴 항상 누가 앉아 있다.' },
   { pos: [-25, -31], t: '정비 메모 #3 — 회전목마', x: '균형 장치는 삼각형 판의 무게중심으로 맞춘다.\n무게중심은 세 중선의 교점, 중선을 꼭짓점에서 2 : 1로 나눈다.\n\n균형추는 남서쪽 구석에.\n마네킹이 움직이면… 눈을 떼지 마.' },
   { pos: [29, -23], t: '정비 메모 #4 — 범퍼카', x: '스위치 조합 = 경우의 수. 곱의 법칙을 기억할 것.\n(적어도 하나) 의 확률 = 1 − (하나도 아닐 확률)\n\n토큰은 남동쪽 구석 쓰레기 더미.\n차가 혼자 움직이면 달려라.' },
   { pos: [-19, -50], t: '미아 보호소 기록', x: '1996.11.24 21:40\n미아 신고: 김민지 (7세), 빨간 풍선, 토끼 머리띠.\n마지막 목격: 관람차 꼭대기 객실.\n\n…아이는 끝내 찾지 못했다.\n사진 조각 다섯 장을 모으면, 그 아이를 찾을 수 있을지도.' },
   { pos: [8, 11], t: '직원 일지', x: '마스코트 "해피" 탈을 쓴 직원이 그날 밤 이후 퇴근하지 않았다.\n탈만 분수대 앞에 남아 있었다.\n\n가끔 방송실에서 혼자 안내 방송이 나온다.\n"아직 폐장 시간이 아닙니다."' },
-  { pos: [7, 69], t: '정문 경고문', x: '정문은 네 놀이기구가 모두 운행되면 열린다.\n전력 충전에는 약 40초가 걸린다.\n\n그동안 해피가 손님을 배웅하러 온다.\n절대 잡히지 마십시오.\n\n밖으로 나갈 때… 뒤를 돌아보지 마십시오.' }
+  { pos: [7, 69], t: '정문 경고문', x: '정문은 네 놀이기구의 운행이 모두 종료되면 열린다.\n전력 충전에는 약 40초가 걸린다.\n\n그동안 해피가 손님을 배웅하러 온다.\n절대 잡히지 마십시오.\n\n밖으로 나갈 때… 뒤를 돌아보지 마십시오.' }
 ];
 
 const josa = (w, a, b) => { const c = w.charCodeAt(w.length - 1); return w + ((c >= 0xAC00 && c <= 0xD7A3 && (c - 0xAC00) % 28) ? a : b); };
@@ -121,7 +121,7 @@ function applyState(S) {
   S = G.state;
   pickups.forEach(p => p.mesh.visible = !S.picked[p.id]);
   const fx = [W.ferris, W.coaster, W.carousel, W.bumper];
-  fx.forEach((r, i) => { r.power = !!S.rides[i]; });
+  fx.forEach((r, i) => { r.power = !S.rides[i]; });
   W.ferris.speed = W.ferris.power ? 0.06 : 0; W.coaster.speed = W.coaster.power ? 0.035 : 0; W.carousel.speed = W.carousel.power ? 0.5 : 0;
   W.setBulbs(W.ferris.bulbs, W.ferris.power, true); W.setBulbs(W.carousel.bulbs, W.carousel.power); W.setBulbs(W.bumper.grid, W.bumper.power, true);
   W.coaster.repair.visible = stDone(RIDES[1].A);
@@ -164,16 +164,16 @@ function askStation(st, header, done) {
 }
 function useStation(i, st) {
   const S = G.state, r = RIDES[i];
-  if (S.ch < i + 1) return UI.toast('전력이 들어오지 않는다.<br><small>먼저 다른 놀이기구를 작동시켜야 한다.</small>');
+  if (S.ch < i + 1) return UI.toast('전력이 들어오지 않는다.<br><small>먼저 다른 놀이기구의 전원을 꺼야 한다.</small>');
   if (stDone(st)) return UI.toast('이미 복구된 장치다.');
   if (st === r.B) {
     if (!S.items[r.item]) return UI.toast(`부품 슬롯이 비어 있다.<br><small>${josa(r.itemName, '이', '가')} 필요하다.</small>`);
     if (!stDone(r.A)) return UI.toast(`먼저 ${josa(r.A.name, '을', '를')} 복구해야 한다.`);
   }
   askStation(st, `${r.name} · ${st.name}`, () => {
-    st.screen.color.setHex(0x00aa44); AudioFX.powerUp();
+    st.screen.color.setHex(0x00aa44); st === r.B ? AudioFX.powerDown() : AudioFX.powerUp();
     if (st === r.A) {
-      UI.toast(`${st.name} 복구 완료!<br><small>이제 ${josa(r.B.name, '을', '를')} 작동시키자.</small>`, 3.5);
+      UI.toast(`${st.name} 복구 완료!<br><small>이제 ${josa(r.B.name, '을', '를')} 조작해 전원을 끄자.</small>`, 3.5);
       if (i === 1) { W.coaster.repair.visible = true; UI.subtitle('(끊어진 레일이 연결되었다)'); }
     } else activateRide(i);
     save();
@@ -181,7 +181,7 @@ function useStation(i, st) {
 }
 function useFinal() {
   const S = G.state;
-  if (S.ch < 5) return UI.toast(`정문이 열리지 않는다.<br><small>운행 완료된 놀이기구: ${S.rides.filter(Boolean).length}/4</small>`);
+  if (S.ch < 5) return UI.toast(`정문이 열리지 않는다.<br><small>운행 종료된 놀이기구: ${S.rides.filter(Boolean).length}/4</small>`);
   askStation(FINAL, '정문 · 최종 점검', () => {
     FINAL.screen.color.setHex(0x00aa44); S.final = 1; save(); startFinalChase();
   });
@@ -193,29 +193,29 @@ function stopAngel() { if (!G.angel) return; G.angel = null; UI.$('timer').textC
 function activateRide(i) {
   stopAngel(); const S = G.state; S.rides[i] = 1; S.ch = i + 2; G.cinematic = 12; save();
   const r = RIDES[i];
-  UI.toast(`<b>${r.name}</b> 운행 시작<br><small>CHAPTER ${i + 1} 완료</small>`, 4);
+  UI.toast(`<b>${r.name}</b> 운행 종료 · 전원 차단<br><small>CHAPTER ${i + 1} 완료</small>`, 4);
   if (i === 0) {
-    W.ferris.power = true; W.setBulbs(W.ferris.bulbs, true, true);
-    announce('관람차 운행을 시작합니다. 꼭대기 객실의 손님은… 아직 내리지 않으셨습니다.', true);
+    W.ferris.power = false; W.setBulbs(W.ferris.bulbs, false);
+    announce('관람차 운행을 종료합니다. 꼭대기 객실의 손님은… 아직 내리지 않으셨습니다.', true);
     setTimeout(() => { Horror.ferrisFigure(25); UI.subtitle('(꼭대기 객실에… 누군가 서 있다. 이쪽을 보고 있다.)', 5); }, 5000);
   } else if (i === 1) {
-    W.coaster.power = true; announce('롤러코스터가 출발합니다. 안전바를 꼭 잡아 주세요. 뒷좌석 손님도요.', true);
+    W.coaster.power = false; announce('롤러코스터 운행을 종료합니다. 모두 내려 주세요. 뒷좌석 손님도요.', true);
     setTimeout(() => { Horror.coasterRider(30); UI.subtitle('(열차 맨 뒷좌석에 누군가 타고 있다…)', 5); }, 4000);
   } else if (i === 2) {
-    W.carousel.power = true; W.setBulbs(W.carousel.bulbs, true); AudioFX.musicBox(0);
-    announce('회전목마가 돌아갑니다. 마네킹 손님들도 즐거워하시네요.', true);
+    W.carousel.power = false; W.setBulbs(W.carousel.bulbs, false); AudioFX.musicBox(0, 2);
+    announce('회전목마 운행을 종료합니다. 마네킹 손님들은… 아직 내리기 싫으시답니다.', true);
     setTimeout(() => { G.angel = { t: 25, m: nearestMannequin() }; UI.subtitle('(마네킹 하나가 움직였다. 눈을 떼지 마라!)', 5); AudioFX.sting(0.6); }, 4000);
   } else if (i === 3) {
-    W.bumper.power = true; W.setBulbs(W.bumper.grid, true, true);
-    announce('범퍼카 운행 시작. 손님을… 들이받으세요.', true);
+    W.bumper.power = false; W.setBulbs(W.bumper.grid, false);
+    announce('범퍼카 운행 종료. 그런데… 몇 대는 멈추지 않네요.', true);
     setTimeout(() => {
       G.chase = { type: 'bumper', t: 18, hitCd: 0, cars: [W.bumper.cars[0], W.bumper.cars[4]] };
       G.chase.cars.forEach(c => c.userData.headl.material = W.M.bulbRed);
-      UI.subtitle('(범퍼카들이 이쪽으로 돌진한다! 도망쳐라!)', 4); AudioFX.sting(1);
+      UI.subtitle('(전원이 꺼졌는데도 범퍼카 두 대가 돌진한다! 도망쳐라!)', 4); AudioFX.sting(1);
     }, 3500);
   }
-  if (i === 3) setTimeout(() => announce('모든 놀이기구의 운행이 완료되었습니다. 정문에서… 해피가 기다리겠습니다.', true), 24000);
-  else setTimeout(() => announce(`다음 운행: ${RIDES[i + 1].name}. ${josa(RIDES[i + 1].name, "으로", "로")} 이동해 주세요.`), 14000);
+  if (i === 3) setTimeout(() => announce('모든 놀이기구의 운행이 종료되었습니다. 정문에서… 해피가 기다리겠습니다.', true), 24000);
+  else setTimeout(() => announce(`다음 운행 종료 대상: ${RIDES[i + 1].name}. ${josa(RIDES[i + 1].name, "으로", "로")} 이동해 주세요.`), 14000);
 }
 function nearestMannequin() { return W.mannequins.reduce((a, m) => dist2(m.position) < dist2(a.position) ? m : a); }
 const dist2 = (p) => Math.hypot(p.x - G.player.x, p.z - G.player.z);
@@ -335,7 +335,7 @@ function intro() {
   G.cinematic = 10; G.player.yaw = Math.PI; UI.blackout(1.5);
   setTimeout(() => { AudioFX.slam(0, 1); UI.shake(); UI.subtitle('(쾅—! 등 뒤에서 철문이 닫혔다)', 3); }, 1200);
   setTimeout(() => announce('아직 폐장 시간이 아닙니다. 모든 놀이기구의 운행을 완료해 주세요.'), 4000);
-  setTimeout(() => UI.toast('CHAPTER 1 · 관람차<br><small>정문은 잠겼다. 네 개의 놀이기구를 작동시켜라.</small>', 5), 11000);
+  setTimeout(() => UI.toast('CHAPTER 1 · 관람차<br><small>정문은 잠겼다. 혼자 돌아가는 네 놀이기구의 전원을 꺼라.</small>', 5), 11000);
 }
 function pause(on) {
   if (on && G.mode === 'play') {
@@ -422,11 +422,11 @@ function objective() {
   if (S.ch <= 4) {
     const i = S.ch - 1, r = RIDES[i];
     const head = `CHAPTER ${S.ch} · ${r.name} — ${r.topic}`;
-    if (!stDone(r.A)) return [head, S.items[r.item] ? `${josa(r.A.name, '을', '를')} 복구하라` : `${josa(r.A.name, '을', '를')} 복구하고 ${josa(r.itemName, '을', '를')} 찾아라`, r.A.pos];
+    if (!stDone(r.A)) return [head, S.items[r.item] ? `${josa(r.A.name, '을', '를')} 조작하라` : `${josa(r.A.name, '을', '를')} 조작하고 ${josa(r.itemName, '을', '를')} 찾아라`, r.A.pos];
     if (!S.items[r.item]) return [head, `${josa(r.itemName, '을', '를')} 찾아라 (정비 메모 참고)`, r.itemPos];
-    return [head, `${r.B.name}에 ${josa(r.itemName, '을', '를')} 설치하고 작동시켜라`, r.B.pos];
+    return [head, `${r.B.name}에 ${josa(r.itemName, '을', '를')} 설치하고 전원을 차단하라`, r.B.pos];
   }
-  if (S.final === 0) return ['FINAL · 정문', '정문 제어 장치를 작동시켜라', FINAL.pos];
+  if (S.final === 0) return ['FINAL · 정문', '정문 제어 장치를 조작하라', FINAL.pos];
   if (S.final === 1) return ['FINAL · 정문', '정문이 열릴 때까지 해피에게서 도망쳐라!', null];
   return ['FINAL · 정문', '열린 정문으로 탈출하라!', [0, 79]];
 }
@@ -435,20 +435,13 @@ function updateHUD(dt) {
   hudT -= dt; const S = G.state;
   UI.hud(S);
   if (hudT > 0) return; hudT = 0.2;
-  const [h, o, tgt] = objective();
+  const [h, o] = objective();
   UI.$('chapterName').textContent = h; UI.$('objective').textContent = o;
   const steps = RIDES.reduce((a, r) => a + (S.items[r.item] ? 1 : 0) + (stDone(r.A) ? 1 : 0) + (stDone(r.B) ? 1 : 0), 0) + (S.final >= 1 ? 1 : 0) + (S.final >= 2 ? 1 : 0);
   UI.$('progFill').style.width = (steps / 14 * 100) + '%';
   UI.$('progText').textContent = `진행률 ${Math.round(steps / 14 * 100)}% · 놀이기구 ${S.rides.filter(Boolean).length}/4 · 문제 ${Object.keys(S.solved).length}/${QUESTIONS.length}`;
   const photos = PHOTOS.filter((_, k) => S.picked['photo' + k]).length;
   UI.$('info').innerHTML = `사진 조각 ${photos}/5<br>수학 ${S.stats.points}점 · 정답률 ${accuracy()}%`;
-  const ar = UI.$('arrow'), ds = UI.$('dist');
-  if (tgt) {
-    const dx = tgt[0] - G.player.x, dz = tgt[1] - G.player.z;
-    const ang = Math.atan2(-dx, -dz) - G.player.yaw;
-    ar.style.transform = `rotate(${-ang}rad)`; ds.textContent = Math.round(Math.hypot(dx, dz)) + 'm';
-    ar.style.visibility = 'visible';
-  } else { ar.style.visibility = 'hidden'; ds.textContent = ''; }
   const tm = Math.floor(S.time); UI.$('vhsTime').textContent = `AM 0${2 + Math.floor(tm / 3600)}:${String(Math.floor(tm / 60) % 60).padStart(2, '0')}:${String(tm % 60).padStart(2, '0')}`;
 }
 

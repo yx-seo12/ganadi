@@ -37,7 +37,7 @@ const Horror = (() => {
   const E = [
     { id: 'farMascot', name: '멀리 서 있는 마스코트', cd: 70, run() { place(W.mascot, (Math.random() - 0.5) * 1.2, 22 + Math.random() * 10); watchVanish(W.mascot, 10, () => { AudioFX.sting(0.6); scare(); }, 0.7, 2.2); } },
     { id: 'dollBehind', name: '뒤돌아보면 사라지는 인형', cd: 60, tags: ['dark'], run() { place(W.doll, Math.PI + (Math.random() - 0.5) * 0.6, 3.5); watchVanish(W.doll, 15, () => { AudioFX.sting(0.8); UI.flash(); scare(); }, 0.2, 0.6); AudioFX.laugh(behindPan()); } },
-    { id: 'carouselSpin', name: '갑자기 작동하는 회전목마', cd: 90, cond: () => near(-40, -32, 40) && !W.carousel.power, run() { W.carousel.forced = 7; W.setBulbs(W.carousel.bulbs, true, true); AudioFX.musicBox(panOf(-40, -32)); setTimeout(() => !W.carousel.power && W.setBulbs(W.carousel.bulbs, false), 7000); UI.subtitle('(회전목마가 혼자 돌기 시작한다)'); } },
+    { id: 'carouselSpin', name: '갑자기 작동하는 회전목마', cd: 90, cond: () => near(-40, -32, 40) && !W.carousel.power, run() { W.carousel.forced = 7; W.setBulbs(W.carousel.bulbs, true, true); AudioFX.musicBox(panOf(-40, -32)); setTimeout(() => !W.carousel.power && W.setBulbs(W.carousel.bulbs, false), 7000); UI.subtitle('(꺼져 있던 회전목마가 혼자 다시 돌기 시작한다)'); } },
     { id: 'bumperSelf', name: '혼자 움직이는 범퍼카', cd: 80, cond: () => near(42, -36, 35) && !G.chase, run() {
       const car = W.bumper.cars[(Math.random() * 6) | 0]; let t = 0; car.userData.headl.material = W.M.bulbRed;
       AudioFX.noise({ dur: 3, type: 'lowpass', freq: 200, gain: 0.3, pan: panOf(car.position.x, car.position.z) });
@@ -86,8 +86,8 @@ const Horror = (() => {
     } },
     { id: 'heartbeat', name: '심장 박동', cd: 45, tags: ['wrong'], screen: true, run() { AudioFX.heartbeat(7, 0.7); UI.pulse(5); } },
     { id: 'musicBoxFar', name: '멀리서 들리는 오르골', cd: 70, run() { AudioFX.musicBox((Math.random() - 0.5) * 1.6, 1.4); } },
-    { id: 'ferrisSilhouette', name: '관람차 꼭대기의 실루엣', cd: 90, cond: () => W.ferris.power && near(-40, 30, 70), run() { H.ferrisFigure(10); } },
-    { id: 'coasterRider', name: '뒷좌석의 존재', cd: 90, cond: () => W.coaster.power && near(47, 27, 50), run() { H.coasterRider(12); } },
+    { id: 'ferrisSilhouette', name: '관람차 꼭대기의 실루엣', cd: 90, cond: () => near(-40, 30, 70), run() { H.ferrisFigure(10); } },
+    { id: 'coasterRider', name: '뒷좌석의 존재', cd: 90, cond: () => near(47, 27, 50), run() { H.coasterRider(12); } },
     { id: 'mannequinCircle', name: '둘러싼 마네킹', cd: 150, w: 0.6, run() {
       W.lampsOn(false); G.flickerT = 0.8;
       W.extraMannequins.forEach((m, i) => { place(m, i / 6 * Math.PI * 2, 2.6); m.visible = true; });
